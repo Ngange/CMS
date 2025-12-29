@@ -1,173 +1,130 @@
-const User = require('../models/user.model');
+const AuthService = require('../services/auth.service');
 const Role = require('../models/role.model');
+const User = require('../models/user.model');
 
-// REGISTER a new user
-exports.register = async (req, res) => {
+const register = async (req, res) => {
   try {
-    const { fullname, email, password, roleName } = req.body;
+    const { fullName, email, password, roleId, profilePhoto } = req.body;
 
-    // Validate required fields
-    if (!fullname || !email || !password || !roleName) {
-      return res.status(400).json({
-        success: false,
-        message: 'All fields are required: fullname, email, password, roleName',
-      });
-    }
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { fullname }],
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email or fullname already exists',
-      });
-    }
-
-    // Find role by name
-    const role = await Role.findOne({ name: roleName });
+    // Validate role exists
+    const role = await Role.findById(roleId);
     if (!role) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid role specified',
-      });
+      return res.status(400).json({ message: 'Invalid role' });
     }
 
-    // Create new user
-    const newUser = new User({
-      fullname,
+    const result = await AuthService.register({
+      fullName,
       email,
       password,
-      role: role._id,
-      isActive: true,
+      role: roleId,
+      profilePhoto,
     });
 
-    await newUser.save();
-
-    // Generate tokens
-    const accessToken = newUser.generateAccessToken();
-    const refreshToken = newUser.generateRefreshToken();
-
-    // Save refresh token
-    newUser.refreshToken = refreshToken;
-    await newUser.save();
-
-    // Prepare response
-    const userResponse = await User.findById(newUser._id)
-      .select('-password -refreshToken')
-      .populate('role');
-
-    return res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user: userResponse,
-        tokens: {
-          accessToken,
-          refreshToken,
-          accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
-        },
-      },
-    });
+    res.status(201).json(result);
   } catch (error) {
-    console.error('Registration error:', error);
-
-    // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: messages,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: 'Registration failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    res.status(400).json({ message: error.message });
   }
 };
 
-// LOGIN user
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const result = await AuthService.login(email, password);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required',
-      });
-    }
-
-    // Find user with password selected
-    const user = await User.findOne({ email })
-      .select('+password +refreshToken')
-      .populate('role');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
-    }
-
-    // Check if account is active
-    if (!user.isActive) {
-      return res.status(403).json({
-        success: false,
-        message: 'Account is deactivated. Please contact administrator.',
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await user.checkPassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password',
-      });
-    }
-
-    // Update last login
-    user.lastLogin = Date.now();
-    await user.save();
-
-    // Generate tokens
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-
-    // Save refresh token
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    // Prepare response without sensitive data
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-
-    return res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: userResponse,
-        tokens: {
-          accessToken,
-          refreshToken,
-          accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
-        },
-      },
+const getProfile = async (req, res) => {
+  try {
+    const user = await req.user.populate('role');
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      profilePhoto: user.profilePhoto,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Login failed',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    res.status(500).json({ message: error.message });
   }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const updates = req.body;
+    const userId = req.user._id;
+
+    // Remove fields that shouldn't be updated
+    delete updates._id;
+    delete updates.role;
+    delete updates.isActive;
+
+    // If password is being updated, hash it first
+    if (updates.password) {
+      if (updates.password.length < 6) {
+        return res
+          .status(400)
+          .json({ message: 'Password must be at least 6 characters' });
+      }
+      // Password will be hashed by user model pre-save hook
+    }
+
+    // If email is being updated, check for duplicates
+    if (updates.email && updates.email !== req.user.email) {
+      const existingUser = await User.findOne({
+        email: updates.email,
+        _id: { $ne: userId },
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).populate('role');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return user data without password
+    const userResponse = {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      profilePhoto: user.profilePhoto,
+      isActive: user.isActive,
+    };
+
+    res.json(userResponse);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    // Since JWT is stateless, logout can be handled client-side
+
+    res.json({
+      message: 'Logged out successfully',
+      // Clear tokens client-side
+      clearTokens: true,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Logout failed' });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getProfile,
+  updateProfile,
+  logout,
 };

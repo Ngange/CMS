@@ -1,43 +1,34 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
-// Role schema
-const roleSchema = new Schema(
+const roleSchema = new mongoose.Schema(
   {
-    // Role name
     name: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
-
     description: {
       type: String,
-      trim: true,
-      max_length: 255,
+      required: true,
     },
-
-    // What this role can do
-    permissions: {
-      type: [String],
-      default: [],
-    },
-
+    permissions: [
+      {
+        resource: {
+          type: String,
+          required: true,
+        },
+        actions: [
+          {
+            type: String,
+            enum: ['create', 'read', 'update', 'delete', 'publish'],
+          },
+        ],
+      },
+    ],
     isSystemRole: {
       type: Boolean,
       default: false,
-    },
-
-    // When it was created
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-
-    updatedAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   {
@@ -45,18 +36,4 @@ const roleSchema = new Schema(
   }
 );
 
-// Don't delete role if users are using it
-roleSchema.pre('remove', async function (next) {
-  const User = mongoose.model('User');
-  const usersWithThisRole = await User.find({ role: this._id });
-
-  if (usersWithThisRole.length > 0) {
-    next(new Error('Cannot delete role - users are still using it'));
-  } else {
-    next();
-  }
-});
-
-const Role = mongoose.model('Role', roleSchema);
-
-module.exports = Role;
+module.exports = mongoose.model('Role', roleSchema);
