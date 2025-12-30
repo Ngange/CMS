@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.yourdomain.com/api',
-  backendUrl: 'https://api.yourdomain.com'
+  apiUrl: 'https://cms-backend.onrender.com/api',
+  backendUrl: 'https://cms-backend.onrender.com'
 };
