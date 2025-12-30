@@ -12,6 +12,7 @@ export class PermissionsComponent implements OnInit {
   systemRoles: Role[] = [];
   customRoles: Role[] = [];
   isLoading = true;
+  errorMessage = '';
 
   constructor(private roleService: RoleService) { }
 
@@ -20,6 +21,7 @@ export class PermissionsComponent implements OnInit {
   }
 
   loadRoles(): void {
+    this.isLoading = true;
     this.roleService.getAllRoles().subscribe({
       next: (roles) => {
         this.roles = roles;
@@ -27,7 +29,8 @@ export class PermissionsComponent implements OnInit {
         this.customRoles = roles.filter(role => !role.isSystemRole);
         this.isLoading = false;
       },
-      error: () => {
+      error: (err) => {
+        this.errorMessage = 'Failed to load permissions';
         this.isLoading = false;
       }
     });
@@ -46,12 +49,12 @@ export class PermissionsComponent implements OnInit {
 
   getActionIcon(action: string): string {
     const icons: { [key: string]: string } = {
-      'create': 'add',
+      'create': 'add_circle',
       'read': 'visibility',
       'update': 'edit',
-      'delete': 'delete',
+      'delete': 'delete_forever',
       'publish': 'publish'
     };
-    return icons[action] || 'code';
+    return icons[action] || 'security';
   }
 }

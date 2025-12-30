@@ -121,10 +121,61 @@ const logout = async (req, res) => {
   }
 };
 
+const getSystemRoles = async (req, res) => {
+  try {
+    const roles = await AuthService.getSystemRoles();
+    res.json(roles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: 'Current and new passwords are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ message: 'New password must be at least 6 characters' });
+    }
+
+    // Get user with password field
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isPasswordValid = await user.comparePassword(currentPassword);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
+  changePassword,
   logout,
+  getSystemRoles,
 };

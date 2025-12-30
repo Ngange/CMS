@@ -12,7 +12,32 @@ const profileRoutes = require('./routes/profile.routes');
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'https://images.unsplash.com',
+          'https://*.unsplash.com',
+          'https://picsum.photos',
+          'https://i.picsum.photos',
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+        scriptSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          'https://images.unsplash.com',
+          'https://picsum.photos',
+        ],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:4200',
@@ -30,6 +55,9 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/auth', authRoutes);

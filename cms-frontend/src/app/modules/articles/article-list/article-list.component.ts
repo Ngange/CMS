@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ArticleService } from '../../../core/services/article.service';
 import { Article } from '../../../core/models/article.model';
 import { User } from '../../../core/models/user.model';
+import { ROLE_NAMES } from '../../../core/constants/roles.constants';
 
 @Component({
   selector: 'app-article-list',
@@ -15,8 +16,8 @@ export class ArticleListComponent implements OnInit {
   filteredArticles: Article[] = [];
   currentUser: User | null = null;
   isLoading = true;
-  statusFilter = 'all';
-  searchTerm = '';
+  statusFilter: string = 'all';
+  searchTerm: string = '';
 
   constructor(
     private articleService: ArticleService,
@@ -36,19 +37,20 @@ export class ArticleListComponent implements OnInit {
         this.filteredArticles = [...this.articles];
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Failed to load articles:', error);
         this.isLoading = false;
       }
     });
   }
 
   filterArticlesByRole(articles: Article[]): Article[] {
-    if (this.currentUser?.role.name === 'Contributor') {
+    if (this.currentUser?.role.name === ROLE_NAMES.CONTRIBUTOR) {
       return articles.filter(article =>
         article.author._id === this.currentUser?._id
       );
     }
-    if (this.currentUser?.role.name === 'Viewer') {
+    if (this.currentUser?.role.name === ROLE_NAMES.VIEWER) {
       return articles.filter(article => article.status === 'published');
     }
     return articles;
@@ -56,12 +58,10 @@ export class ArticleListComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredArticles = this.articles.filter(article => {
-      // Status filter
       if (this.statusFilter !== 'all' && article.status !== this.statusFilter) {
         return false;
       }
 
-      // Search filter
       if (this.searchTerm) {
         const term = this.searchTerm.toLowerCase();
         return (
@@ -77,31 +77,23 @@ export class ArticleListComponent implements OnInit {
 
   canEdit(article: Article): boolean {
     if (this.authService.hasPermission('article', 'update')) {
-      if (this.currentUser?.role.name === 'SuperAdmin' || this.currentUser?.role.name === 'Manager') {
+      if (this.currentUser?.role.name === ROLE_NAMES.SUPER_ADMIN ||
+          this.currentUser?.role.name === ROLE_NAMES.MANAGER) {
         return true;
       }
-      if (this.currentUser?.role.name === 'Contributor') {
-        return article.author._id === this.currentUser?._id;
-      }
-    }
-    return false;
-  }
-
-  canDelete(article: Article): boolean {
-    if (this.authService.hasPermission('article', 'delete')) {
-      if (this.currentUser?.role.name === 'SuperAdmin' || this.currentUser?.role.name === 'Manager') {
-        return true;
-      }
-      if (this.currentUser?.role.name === 'Contributor') {
-        return article.author._id === this.currentUser?._id;
-      }
+      return article.author._id === this.currentUser?._id;
     }
     return false;
   }
 
   canPublish(article: Article): boolean {
     return this.authService.hasPermission('article', 'publish') &&
-           (this.currentUser?.role.name === 'SuperAdmin' || this.currentUser?.role.name === 'Manager');
+           (this.currentUser?.role.name === ROLE_NAMES.SUPER_ADMIN ||
+            this.currentUser?.role.name === ROLE_NAMES.MANAGER);
+  }
+
+  canDelete(article: Article): boolean {
+    return this.authService.hasPermission('article', 'delete');
   }
 
   onPublish(article: Article): void {
@@ -109,6 +101,9 @@ export class ArticleListComponent implements OnInit {
       next: () => {
         article.status = 'published';
         article.publishedAt = new Date();
+      },
+      error: (error) => {
+        console.error('Failed to publish article:', error);
       }
     });
   }
@@ -118,6 +113,9 @@ export class ArticleListComponent implements OnInit {
       next: () => {
         article.status = 'draft';
         article.publishedAt = undefined;
+      },
+      error: (error) => {
+        console.error('Failed to unpublish article:', error);
       }
     });
   }
@@ -128,16 +126,36 @@ export class ArticleListComponent implements OnInit {
         next: () => {
           this.articles = this.articles.filter(a => a._id !== article._id);
           this.applyFilters();
+        },
+        error: (error) => {
+          console.error('Failed to delete article:', error);
         }
       });
     }
   }
 
   viewArticle(article: Article): void {
-    this.router.navigate(['/articles', article._id]);
+    this.router.navigate(['/articles/view', article._id]);
   }
 
   editArticle(article: Article): void {
     this.router.navigate(['/articles/edit', article._id]);
+  }
+
+  createArticle(): void {
+    this.router.navigate(['/articles/create']);
+  }
+
+  formatDate(date: Date | undefined): string {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  getImageUrl(imagePath: string | null): string | null {
+    return this.articleService.getImageUrl(imagePath);
   }
 }

@@ -33,6 +33,11 @@ const updateMyProfile = async (req, res) => {
     const updates = req.body;
     const userId = req.user._id;
 
+    // Handle file upload
+    if (req.file) {
+      updates.profilePhoto = req.file.path;
+    }
+
     // Remove fields that users shouldn't be able to update themselves
     delete updates._id;
     delete updates.role;

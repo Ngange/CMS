@@ -45,8 +45,24 @@ const updateRole = async (req, res) => {
   }
 };
 
+const deleteRole = async (req, res) => {
+  try {
+    const { roleId } = req.params;
+    const deleted = await PermissionService.deleteRole(roleId);
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Role not found' });
+    }
+
+    res.json({ message: 'Role deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAllRoles,
   createRole,
   updateRole,
+  deleteRole,
 };

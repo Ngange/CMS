@@ -1,1 +1,180 @@
-<p>article-edit works!</p>
+<div class="article-edit-container">
+  <div class="edit-header">
+    <button
+      mat-icon-button
+      routerLink="/articles"
+      aria-label="Back to articles"
+    >
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>Edit Article</h1>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success" role="alert">
+    <mat-icon>check_circle</mat-icon>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error" role="alert">
+    <mat-icon>error</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading && !isLoaded" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading article...</p>
+  </div>
+
+  <!-- Edit Form -->
+  <mat-card *ngIf="isLoaded" class="edit-form-card">
+    <form [formGroup]="articleForm" (ngSubmit)="onSubmit()">
+      <mat-card-content>
+        <!-- Title Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Article Title</mat-label>
+          <input
+            matInput
+            formControlName="title"
+            placeholder="Enter article title"
+            maxlength="200"
+          />
+          <mat-hint align="end">{{ titleCharCount }} / 200</mat-hint>
+          <mat-error *ngIf="articleForm.get('title')?.hasError('required')">
+            Title is required
+          </mat-error>
+          <mat-error *ngIf="articleForm.get('title')?.hasError('minlength')">
+            Title must be at least 5 characters
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Body Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Article Content</mat-label>
+          <textarea
+            matInput
+            formControlName="body"
+            placeholder="Write your article content here..."
+            rows="12"
+            maxlength="5000"
+          ></textarea>
+          <mat-hint align="end">{{ bodyCharCount }} / 5000</mat-hint>
+          <mat-error *ngIf="articleForm.get('body')?.hasError('required')">
+            Content is required
+          </mat-error>
+          <mat-error *ngIf="articleForm.get('body')?.hasError('minlength')">
+            Content must be at least 50 characters
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Image Upload Section -->
+        <div class="image-upload-section">
+          <h3>Article Image</h3>
+          <p class="help-text">
+            Update the article's featured image (optional)
+          </p>
+
+          <!-- Image Preview -->
+          <div class="image-preview-wrapper">
+            <img
+              *ngIf="previewUrl"
+              [src]="previewUrl"
+              alt="Article preview"
+              class="image-preview"
+            />
+            <div *ngIf="!previewUrl" class="image-placeholder">
+              <mat-icon>image</mat-icon>
+              <p>No image selected</p>
+            </div>
+          </div>
+
+          <!-- Upload Controls -->
+          <div class="upload-controls">
+            <input
+              #fileInput
+              type="file"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              hidden
+            />
+            <button
+              type="button"
+              mat-raised-button
+              color="primary"
+              (click)="fileInput.click()"
+              class="upload-btn"
+            >
+              <mat-icon>cloud_upload</mat-icon>
+              Change Image
+            </button>
+            <button
+              *ngIf="previewUrl"
+              type="button"
+              mat-stroked-button
+              (click)="removeImage()"
+              class="remove-btn"
+            >
+              <mat-icon>delete</mat-icon>
+              Remove
+            </button>
+            <span *ngIf="selectedFile" class="file-name">
+              <mat-icon>check_circle</mat-icon>
+              {{ selectedFileName }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Article Info -->
+        <div *ngIf="article" class="article-info-section">
+          <h3>Article Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Status</label>
+              <span class="status-badge" [ngClass]="'status-' + article.status">
+                {{ article.status | titlecase }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Author</label>
+              <span>{{ article.author.fullName }}</span>
+            </div>
+            <div class="info-item">
+              <label>Created</label>
+              <span>{{ article.createdAt | date : "medium" }}</span>
+            </div>
+            <div class="info-item" *ngIf="article.updatedAt">
+              <label>Last Updated</label>
+              <span>{{ article.updatedAt | date : "medium" }}</span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <!-- Actions -->
+      <mat-card-actions>
+        <div class="button-group">
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            [disabled]="!articleForm.valid || isLoading"
+          >
+            <mat-icon *ngIf="!isLoading">save</mat-icon>
+            <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+            {{ isLoading ? "Updating..." : "Update Article" }}
+          </button>
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="onCancel()"
+            [disabled]="isLoading"
+          >
+            <mat-icon>close</mat-icon>
+            Cancel
+          </button>
+        </div>
+      </mat-card-actions>
+    </form>
+  </mat-card>
+</div>

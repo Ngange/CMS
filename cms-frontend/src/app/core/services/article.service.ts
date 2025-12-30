@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 import { Article } from '../models/article.model';
 
 @Injectable({
@@ -38,5 +38,15 @@ export class ArticleService {
 
   unpublishArticle(id: string): Observable<Article> {
     return this.http.post<Article>(`${this.apiUrl}/${id}/unpublish`, {});
+  }
+
+  getImageUrl(imagePath: string | null): string | null {
+    if (!imagePath) return null;
+    // If it's already a full URL, return as-is
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    // Otherwise, prepend the backend URL
+    return `${environment.backendUrl}/${imagePath}`;
   }
 }

@@ -3,6 +3,9 @@ import { UserService } from '../../../core/services/user.service';
 import { RoleService } from '../../../core/services/role.service';
 import { User } from '../../../core/models/user.model';
 import { Role } from '../../../core/models/role.model';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { UserEditDialogComponent } from './user-edit-dialog/user-edit-dialog.component';
 
 @Component({
   selector: 'app-users',
@@ -17,10 +20,13 @@ export class UsersComponent implements OnInit {
   searchTerm = '';
   roleFilter = 'all';
   statusFilter = 'all';
+  displayedColumns: string[] = ['fullName', 'email', 'role', 'status', 'actions'];
 
   constructor(
     private userService: UserService,
-    private roleService: RoleService
+    private roleService: RoleService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit(): void {
@@ -32,10 +38,11 @@ export class UsersComponent implements OnInit {
     this.userService.getAllUsers().subscribe({
       next: (users) => {
         this.users = users;
-        this.filteredUsers = [...users];
+        this.applyFilters();
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Failed to load users:', error);
         this.isLoading = false;
       }
     });
@@ -45,6 +52,9 @@ export class UsersComponent implements OnInit {
     this.roleService.getAllRoles().subscribe({
       next: (roles) => {
         this.roles = roles;
+      },
+      error: (error) => {
+        console.error('Failed to load roles:', error);
       }
     });
   }
@@ -83,6 +93,9 @@ export class UsersComponent implements OnInit {
     this.userService.toggleUserStatus(user._id, newStatus).subscribe({
       next: () => {
         user.isActive = newStatus;
+      },
+      error: (error) => {
+        console.error('Failed to toggle user status:', error);
       }
     });
   }
@@ -91,6 +104,9 @@ export class UsersComponent implements OnInit {
     this.userService.updateUser(user._id, { role: roleId }).subscribe({
       next: (updatedUser) => {
         user.role = updatedUser.role;
+      },
+      error: (error) => {
+        console.error('Failed to update user role:', error);
       }
     });
   }
@@ -101,13 +117,51 @@ export class UsersComponent implements OnInit {
         next: () => {
           this.users = this.users.filter(u => u._id !== user._id);
           this.applyFilters();
+        },
+        error: (error) => {
+          console.error('Failed to delete user:', error);
         }
       });
     }
   }
 
+  editUser(user: User): void {
+    const dialogRef = this.dialog.open(UserEditDialogComponent, {
+      width: '500px',
+      data: { user: { ...user }, roles: this.roles }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.updateUser(user._id, result).subscribe({
+          next: (updatedUser) => {
+            const index = this.users.findIndex(u => u._id === user._id);
+            if (index !== -1) {
+              this.users[index] = updatedUser;
+              this.applyFilters();
+            }
+            this.snackBar.open('User updated successfully', 'Close', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Failed to update user:', error);
+            const errorMsg = error.error?.message || 'Failed to update user';
+            this.snackBar.open(errorMsg, 'Close', { duration: 5000, panelClass: ['error-snackbar'] });
+          }
+        });
+      }
+    });
+  }
+
   getRoleName(roleId: string): string {
     const role = this.roles.find(r => r._id === roleId);
     return role ? role.name : 'Unknown';
+  }
+
+  getStatusColor(isActive: boolean): string {
+    return isActive ? 'success' : 'warn';
+  }
+
+  getStatusIcon(isActive: boolean): string {
+    return isActive ? 'check_circle' : 'cancel';
   }
 }

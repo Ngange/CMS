@@ -1,1 +1,291 @@
-<p>roles works!</p>
+<div class="roles-container">
+  <div class="page-header">
+    <div>
+      <h1>Roles Management</h1>
+      <p class="subtitle">Create, edit, and review role permissions</p>
+    </div>
+    <div class="header-actions">
+      <button
+        mat-stroked-button
+        color="primary"
+        (click)="startCreate()"
+        [disabled]="isSaving || !canCreate"
+      >
+        <mat-icon>add</mat-icon>
+        New Role
+      </button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    <mat-icon>error</mat-icon>
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">
+    <mat-icon>check_circle</mat-icon>
+    {{ successMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading roles...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="content-grid">
+    <!-- Roles List -->
+    <div class="roles-list">
+      <div class="section-header">
+        <div class="title-block">
+          <mat-icon>list_alt</mat-icon>
+          <div>
+            <h2>Existing Roles</h2>
+            <p class="muted">System roles are read-only</p>
+          </div>
+        </div>
+        <span class="pill">{{ roles.length }} total</span>
+      </div>
+
+      <div class="role-group">
+        <div class="group-header">
+          <h3>System Roles</h3>
+          <span class="pill pill-info">{{ systemRoles.length }}</span>
+        </div>
+        <div class="roles-grid">
+          <mat-card *ngFor="let role of systemRoles" class="role-card system">
+            <mat-card-header>
+              <div class="role-title">
+                <h4>{{ role.name }}</h4>
+                <mat-chip color="primary" selected>
+                  <mat-icon>lock</mat-icon>
+                  System
+                </mat-chip>
+              </div>
+              <p class="description">{{ role.description }}</p>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="permissions-badges">
+                <div
+                  *ngFor="let permission of role.permissions"
+                  class="permission-row"
+                >
+                  <span class="resource">{{ permission.resource }}</span>
+                  <div class="actions">
+                    <mat-chip
+                      *ngFor="let action of permission.actions"
+                      [color]="getActionColor(action)"
+                      selected
+                    >
+                      <mat-icon>{{ getActionIcon(action) }}</mat-icon>
+                      {{ action }}
+                    </mat-chip>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          <p *ngIf="systemRoles.length === 0" class="empty">
+            No system roles found.
+          </p>
+        </div>
+      </div>
+
+      <div class="role-group">
+        <div class="group-header">
+          <h3>Custom Roles</h3>
+          <span class="pill pill-info">{{ customRoles.length }}</span>
+        </div>
+        <div class="roles-grid">
+          <mat-card *ngFor="let role of customRoles" class="role-card custom">
+            <mat-card-header>
+              <div class="role-title">
+                <h4>{{ role.name }}</h4>
+                <mat-chip color="primary" selected>
+                  <mat-icon>edit</mat-icon>
+                  Custom
+                </mat-chip>
+              </div>
+              <p class="description">{{ role.description }}</p>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="permissions-badges">
+                <div
+                  *ngFor="let permission of role.permissions"
+                  class="permission-row"
+                >
+                  <span class="resource">{{ permission.resource }}</span>
+                  <div class="actions">
+                    <mat-chip
+                      *ngFor="let action of permission.actions"
+                      [color]="getActionColor(action)"
+                      selected
+                    >
+                      <mat-icon>{{ getActionIcon(action) }}</mat-icon>
+                      {{ action }}
+                    </mat-chip>
+                  </div>
+                </div>
+                <p
+                  *ngIf="!role.permissions || role.permissions.length === 0"
+                  class="empty"
+                >
+                  No permissions assigned.
+                </p>
+              </div>
+            </mat-card-content>
+            <mat-card-actions align="end">
+              <button
+                mat-button
+                color="primary"
+                (click)="editRole(role)"
+                [disabled]="isSaving || !canUpdate"
+              >
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <ng-container
+                *ngIf="confirmDeleteId === role._id; else deleteBtn"
+              >
+                <button
+                  mat-button
+                  color="warn"
+                  (click)="requestDelete(role)"
+                  [disabled]="isSaving"
+                >
+                  <mat-icon>delete_forever</mat-icon>
+                  Confirm
+                </button>
+                <button
+                  mat-button
+                  (click)="cancelDelete()"
+                  [disabled]="isSaving"
+                >
+                  Cancel
+                </button>
+              </ng-container>
+              <ng-template #deleteBtn>
+                <button
+                  mat-button
+                  color="warn"
+                  (click)="requestDelete(role)"
+                  [disabled]="isSaving || !canDelete"
+                >
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
+              </ng-template>
+            </mat-card-actions>
+          </mat-card>
+          <p *ngIf="customRoles.length === 0" class="empty">
+            No custom roles yet.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Form -->
+    <div class="role-form-card">
+      <mat-card>
+        <mat-card-header>
+          <div class="role-title">
+            <h2>{{ selectedRole ? "Edit Role" : "Create Role" }}</h2>
+            <p class="muted">Define name, description, and permissions</p>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form [formGroup]="roleForm" (ngSubmit)="submit()" class="role-form">
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Name</mat-label>
+                <input
+                  matInput
+                  formControlName="name"
+                  placeholder="e.g. Content Editor"
+                />
+                <mat-error *ngIf="roleForm.get('name')?.hasError('required')"
+                  >Name is required</mat-error
+                >
+                <mat-error *ngIf="roleForm.get('name')?.hasError('minlength')"
+                  >Min length is 3</mat-error
+                >
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Description</mat-label>
+                <textarea
+                  matInput
+                  rows="3"
+                  formControlName="description"
+                  placeholder="Role description"
+                ></textarea>
+                <mat-error
+                  *ngIf="roleForm.get('description')?.hasError('required')"
+                  >Description is required</mat-error
+                >
+              </mat-form-field>
+            </div>
+
+            <div class="permissions-matrix">
+              <div class="matrix-header">
+                <h3>Permissions</h3>
+                <p class="muted">Check the actions allowed for each resource</p>
+              </div>
+              <div class="matrix-table">
+                <div class="matrix-row matrix-head">
+                  <div class="cell resource-col">Resource</div>
+                  <div class="cell" *ngFor="let action of actions">
+                    {{ action }}
+                  </div>
+                </div>
+
+                <div
+                  class="matrix-row"
+                  *ngFor="let _ of permissionsArray.controls; let i = index"
+                >
+                  <div class="cell resource-col">{{ getResourceName(i) }}</div>
+                  <div
+                    class="cell"
+                    *ngFor="
+                      let actionCtrl of getActionsControls(i);
+                      let j = index
+                    "
+                  >
+                    <mat-checkbox [formControl]="actionCtrl"></mat-checkbox>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                mat-stroked-button
+                color="primary"
+                type="button"
+                (click)="startCreate()"
+                [disabled]="isSaving"
+              >
+                <mat-icon>refresh</mat-icon>
+                Reset
+              </button>
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="
+                  isSaving ||
+                  (!selectedRole && !canCreate) ||
+                  (selectedRole && !canUpdate)
+                "
+              >
+                <mat-icon>save</mat-icon>
+                {{ selectedRole ? "Update Role" : "Create Role" }}
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

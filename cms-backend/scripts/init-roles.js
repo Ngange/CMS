@@ -5,6 +5,7 @@ require('dotenv').config();
 const initializeRoles = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
 
     const systemRoles = [
       {
@@ -47,13 +48,23 @@ const initializeRoles = async () => {
       },
     ];
 
+    console.log('Deleting existing system roles...');
+    await Role.deleteMany({
+      name: { $in: ['SuperAdmin', 'Manager', 'Contributor', 'Viewer'] },
+    });
+
+    console.log('Creating new system roles...');
     for (const roleData of systemRoles) {
-      const existingRole = await Role.findOne({ name: roleData.name });
-      if (!existingRole) {
-        await Role.create(roleData);
-        console.log(`Created role: ${roleData.name}`);
-      }
+      const role = await Role.create(roleData);
+      console.log(`Created role: ${role.name} (ID: ${role._id})`);
     }
+
+    // Verify roles were created
+    const allRoles = await Role.find({ isSystemRole: true });
+    console.log(`Total system roles in database: ${allRoles.length}`);
+    allRoles.forEach((role) => {
+      console.log(`  - ${role.name}`);
+    });
 
     console.log('System roles initialized successfully');
     process.exit(0);

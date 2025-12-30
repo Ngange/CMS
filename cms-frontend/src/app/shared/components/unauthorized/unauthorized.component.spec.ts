@@ -6,10 +6,12 @@ describe('UnauthorizedComponent', () => {
   let component: UnauthorizedComponent;
   let fixture: ComponentFixture<UnauthorizedComponent>;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [UnauthorizedComponent]
-    });
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [ UnauthorizedComponent ]
+    })
+    .compileComponents();
+
     fixture = TestBed.createComponent(UnauthorizedComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -1,85 +1,180 @@
 <div class="home-container">
-  <div class="hero-section">
-    <h1>Welcome to the Role-Based CMS</h1>
-    <p class="subtitle">
-      A powerful content management system with role-based access control
-    </p>
+  <!-- Unauthenticated View -->
+  <div *ngIf="!isAuthenticated">
+    <div class="hero-section">
+      <h1>Welcome to the Role-Based CMS</h1>
+      <p class="subtitle">
+        A powerful content management system with role-based access control
+      </p>
 
-    <div class="action-buttons">
-      <button
-        mat-raised-button
-        color="primary"
-        routerLink="/register"
-        class="btn-margin"
-      >
-        Get Started
-      </button>
-      <button
-        mat-raised-button
-        color="accent"
-        routerLink="/login"
-        class="btn-margin"
-      >
-        Login
-      </button>
-    </div>
-  </div>
-
-  <div class="features-section" *ngIf="!isAuthenticated">
-    <h2>Features</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <mat-icon class="feature-icon">lock</mat-icon>
-        <h3>Role-Based Access</h3>
-        <p>
-          Control what users can see and do based on their roles and permissions
-        </p>
-      </div>
-      <div class="feature-card">
-        <mat-icon class="feature-icon">edit</mat-icon>
-        <h3>Content Management</h3>
-        <p>Create, edit, and publish articles with our intuitive editor</p>
-      </div>
-      <div class="feature-card">
-        <mat-icon class="feature-icon">people</mat-icon>
-        <h3>User Management</h3>
-        <p>Manage users, roles, and permissions from the admin panel</p>
+      <div class="action-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          routerLink="/register"
+          class="btn-margin"
+        >
+          Get Started
+        </button>
+        <button
+          mat-raised-button
+          routerLink="/login"
+          class="btn-margin btn-login"
+        >
+          Login
+        </button>
       </div>
     </div>
-  </div>
 
-  <div class="articles-section" *ngIf="isAuthenticated">
-    <h2>Latest Articles</h2>
-    <div *ngIf="isLoading" class="loading-spinner">
-      <mat-spinner></mat-spinner>
-    </div>
-    <div *ngIf="!isLoading && articles.length === 0" class="no-articles">
-      <p>No published articles yet.</p>
-    </div>
-    <div *ngIf="!isLoading && articles.length > 0" class="articles-grid">
-      <mat-card class="article-card" *ngFor="let article of articles">
-        <mat-card-header>
-          <mat-card-title>{{ article.title }}</mat-card-title>
-          <mat-card-subtitle
-            >By {{ article.author.fullName }} |
-            {{ article.createdAt | date }}</mat-card-subtitle
-          >
-        </mat-card-header>
-        <mat-card-content>
+    <div class="features-section">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <mat-icon class="feature-icon">lock</mat-icon>
+          <h3>Role-Based Access</h3>
           <p>
-            {{ (article.body | slice : 0 : 150) + "..." }}
+            Control what users can see and do based on their roles and
+            permissions
           </p>
-        </mat-card-content>
-        <mat-card-actions>
+        </div>
+        <div class="feature-card">
+          <mat-icon class="feature-icon">edit</mat-icon>
+          <h3>Content Management</h3>
+          <p>Create, edit, and publish articles with our intuitive editor</p>
+        </div>
+        <div class="feature-card">
+          <mat-icon class="feature-icon">people</mat-icon>
+          <h3>User Management</h3>
+          <p>Manage users, roles, and permissions from the admin panel</p>
+        </div>
+        <div class="feature-card">
+          <mat-icon class="feature-icon">dashboard</mat-icon>
+          <h3>Analytics Dashboard</h3>
+          <p>Track content performance with comprehensive analytics</p>
+        </div>
+        <div class="feature-card">
+          <mat-icon class="feature-icon">security</mat-icon>
+          <h3>Secure & Reliable</h3>
+          <p>Built with security best practices and JWT authentication</p>
+        </div>
+        <div class="feature-card">
+          <mat-icon class="feature-icon">speed</mat-icon>
+          <h3>Fast & Responsive</h3>
+          <p>Optimized performance with modern Angular framework</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authenticated View -->
+  <div *ngIf="isAuthenticated">
+    <div class="authenticated-hero">
+      <div class="hero-content">
+        <h1>Welcome back, {{ currentUser?.fullName }}!</h1>
+        <p class="subtitle">Ready to create amazing content?</p>
+        <div class="action-buttons">
           <button
-            mat-button
+            mat-raised-button
             color="primary"
-            [routerLink]="['/articles', article._id]"
+            routerLink="/dashboard"
+            class="btn-margin"
           >
-            Read More
+            <mat-icon>dashboard</mat-icon>
+            Go to Dashboard
           </button>
-        </mat-card-actions>
-      </mat-card>
+          <button
+            *appHasPermission="'article:create'"
+            mat-raised-button
+            color="accent"
+            routerLink="/articles/create"
+            class="btn-margin"
+          >
+            <mat-icon>add</mat-icon>
+            Create Article
+          </button>
+          <button
+            mat-raised-button
+            routerLink="/articles"
+            class="btn-margin btn-secondary"
+          >
+            <mat-icon>article</mat-icon>
+            Browse Articles
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="published-articles-section">
+      <div class="section-header">
+        <h2>Latest Published Articles</h2>
+        <button mat-button color="primary" routerLink="/articles">
+          View All
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="isLoading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading articles...</p>
+      </div>
+
+      <div
+        *ngIf="!isLoading && publishedArticles.length === 0"
+        class="empty-state"
+      >
+        <mat-icon>article</mat-icon>
+        <p>No published articles yet</p>
+        <button
+          *appHasPermission="'article:create'"
+          mat-raised-button
+          color="primary"
+          routerLink="/articles/create"
+        >
+          Create First Article
+        </button>
+      </div>
+
+      <div
+        *ngIf="!isLoading && publishedArticles.length > 0"
+        class="articles-grid"
+      >
+        <mat-card
+          *ngFor="let article of publishedArticles"
+          class="article-card"
+          (click)="viewArticle(article._id)"
+        >
+          <div *ngIf="article.image" class="article-image">
+            <img
+              [src]="getImageUrl(article.image)"
+              [alt]="article.title"
+              crossorigin="anonymous"
+              loading="lazy"
+            />
+          </div>
+          <mat-card-content>
+            <h3>{{ article.title }}</h3>
+            <p class="article-excerpt">{{ getExcerpt(article.body) }}</p>
+            <div class="article-footer">
+              <div class="author-info">
+                <mat-icon>person</mat-icon>
+                <span>{{ article.author.fullName }}</span>
+              </div>
+              <div class="article-meta">
+                <span class="date">
+                  <mat-icon>schedule</mat-icon>
+                  {{
+                    article.publishedAt || article.createdAt | date : "MMM d, y"
+                  }}
+                </span>
+                <span *ngIf="article.views" class="views">
+                  <mat-icon>visibility</mat-icon>
+                  {{ article.views }}
+                </span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
     </div>
   </div>
 </div>

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { ArticleService } from '../../core/services/article.service';
 import { User } from '../../core/models/user.model';
 
 @Component({
@@ -16,10 +17,14 @@ export class ProfileComponent implements OnInit {
   isLoading = false;
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
+  passwordChangeMode = false;
+  successMessage = '';
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
-    private authService: AuthService
+    private authService: AuthService,
+    private articleService: ArticleService
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', Validators.required],
@@ -45,7 +50,14 @@ export class ProfileComponent implements OnInit {
           fullName: user.fullName,
           email: user.email
         });
-        this.previewUrl = user.profilePhoto || null;
+        // Use getImageUrl to resolve the profile photo path
+        this.previewUrl = user.profilePhoto
+          ? this.articleService.getImageUrl(user.profilePhoto)
+          : null;
+      },
+      error: (error) => {
+        console.error('Failed to load profile:', error);
+        this.errorMessage = 'Failed to load profile';
       }
     });
   }
@@ -69,9 +81,16 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  removeProfilePhoto(): void {
+    this.selectedFile = null;
+    this.previewUrl = null;
+  }
+
   onUpdateProfile(): void {
     if (this.profileForm.valid) {
       this.isLoading = true;
+      this.successMessage = '';
+      this.errorMessage = '';
 
       const formData = new FormData();
       formData.append('fullName', this.profileForm.get('fullName')?.value);
@@ -85,9 +104,14 @@ export class ProfileComponent implements OnInit {
         next: () => {
           this.isEditing = false;
           this.isLoading = false;
+          this.successMessage = 'Profile updated successfully';
+          this.selectedFile = null;
+          setTimeout(() => this.successMessage = '', 3000);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Failed to update profile:', error);
           this.isLoading = false;
+          this.errorMessage = 'Failed to update profile';
         }
       });
     }
@@ -96,17 +120,37 @@ export class ProfileComponent implements OnInit {
   onChangePassword(): void {
     if (this.passwordForm.valid) {
       this.isLoading = true;
+      this.successMessage = '';
+      this.errorMessage = '';
 
       const passwordData = this.passwordForm.value;
       this.authService.changePassword(passwordData).subscribe({
         next: () => {
           this.passwordForm.reset();
           this.isLoading = false;
+          this.passwordChangeMode = false;
+          this.successMessage = 'Password changed successfully';
+          setTimeout(() => this.successMessage = '', 3000);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Failed to change password:', error);
           this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Failed to change password';
         }
       });
     }
+  }
+
+  togglePasswordChangeMode(): void {
+    this.passwordChangeMode = !this.passwordChangeMode;
+    if (!this.passwordChangeMode) {
+      this.passwordForm.reset();
+    }
+  }
+
+  cancelEdit(): void {
+    this.isEditing = false;
+    this.selectedFile = null;
+    this.loadUserProfile();
   }
 }

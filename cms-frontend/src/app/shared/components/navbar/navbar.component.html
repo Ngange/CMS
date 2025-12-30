@@ -11,8 +11,11 @@
     </button>
 
     <div class="navbar-menu" [class.active]="isMenuOpen">
-      <ul class="navbar-nav">
-        <li class="nav-item" *ngFor="let item of getNavItems()">
+      <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
+        <li
+          class="nav-item"
+          *ngFor="let item of navItems; trackBy: trackByRoute"
+        >
           <a
             class="nav-link"
             [routerLink]="item.route"
@@ -24,12 +27,12 @@
         </li>
       </ul>
 
-      <div class="navbar-user" *ngIf="currentUser">
+      <div class="navbar-user" *ngIf="currentUser$ | async as currentUser">
         <div class="user-dropdown">
-          <button class="user-button">
+          <button class="user-button" (click)="toggleDropdown()">
             <img
               *ngIf="currentUser.profilePhoto"
-              [src]="currentUser.profilePhoto"
+              [src]="getImageUrl(currentUser.profilePhoto)"
               alt="Profile"
               class="user-avatar"
             />
@@ -39,7 +42,7 @@
             <span>{{ currentUser.fullName }}</span>
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
-          <div class="dropdown-menu">
+          <div class="dropdown-menu" [class.show]="isDropdownOpen">
             <a routerLink="/profile" class="dropdown-item">
               <mat-icon>person</mat-icon> Profile
             </a>
@@ -51,7 +54,7 @@
         </div>
       </div>
 
-      <div class="navbar-auth" *ngIf="!currentUser">
+      <div class="navbar-auth" *ngIf="!(currentUser$ | async)">
         <a routerLink="/login" class="btn btn-outline">Login</a>
         <a routerLink="/register" class="btn btn-primary">Register</a>
       </div>

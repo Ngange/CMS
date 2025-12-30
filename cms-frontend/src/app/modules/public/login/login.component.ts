@@ -12,6 +12,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  hidePassword = true;
 
   constructor(
     private fb: FormBuilder,

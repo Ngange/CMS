@@ -1,1 +1,201 @@
-<p>article-list works!</p>
+<div
+  class="article-list-container"
+  role="region"
+  aria-label="Articles management"
+>
+  <div class="articles-header">
+    <div class="header-content">
+      <h1>Articles</h1>
+      <p class="subtitle">Manage and organize your article content</p>
+    </div>
+    <button
+      *appHasPermission="'article:create'"
+      mat-raised-button
+      color="primary"
+      (click)="createArticle()"
+      class="create-btn"
+      aria-label="Create a new article"
+    >
+      <mat-icon>add</mat-icon>
+      Create Article
+    </button>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-row" role="search">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchTerm"
+            (input)="applyFilters()"
+            placeholder="Search by title, content, or author..."
+            aria-label="Search articles"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select
+            [(ngModel)]="statusFilter"
+            (selectionChange)="applyFilters()"
+            aria-label="Filter articles by status"
+          >
+            <mat-option value="all">All Status</mat-option>
+            <mat-option value="published">Published</mat-option>
+            <mat-option value="draft">Draft</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="result-count">
+          <span>{{ filteredArticles.length }} article(s)</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading articles...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredArticles.length === 0" class="empty-state">
+    <mat-icon>article</mat-icon>
+    <h2>No articles found</h2>
+    <p>
+      {{
+        searchTerm
+          ? "Try adjusting your search criteria"
+          : "Get started by creating your first article"
+      }}
+    </p>
+  </div>
+
+  <!-- Articles Grid -->
+  <div *ngIf="!isLoading && filteredArticles.length > 0" class="articles-grid">
+    <mat-card *ngFor="let article of filteredArticles" class="article-card">
+      <!-- Article Image -->
+      <div
+        *ngIf="article.image"
+        class="article-image-wrapper clickable"
+        role="link"
+        tabindex="0"
+        aria-label="Open article"
+        (click)="viewArticle(article)"
+        (keyup.enter)="viewArticle(article)"
+        (keyup.space)="viewArticle(article)"
+        (keydown.space)="$event.preventDefault()"
+      >
+        <img
+          [src]="getImageUrl(article.image)"
+          alt="Article image"
+          class="article-image"
+        />
+        <div class="status-badge" [ngClass]="'status-' + article.status">
+          {{ article.status | titlecase }}
+        </div>
+      </div>
+
+      <!-- Article Content -->
+      <mat-card-header>
+        <mat-card-title
+          class="article-title clickable"
+          role="link"
+          tabindex="0"
+          aria-label="Open article"
+          (click)="viewArticle(article)"
+          (keyup.enter)="viewArticle(article)"
+          (keyup.space)="viewArticle(article)"
+          (keydown.space)="$event.preventDefault()"
+        >
+          {{ article.title }}
+        </mat-card-title>
+        <mat-card-subtitle class="article-meta">
+          By <strong>{{ article.author.fullName }}</strong> •
+          {{ formatDate(article.createdAt) }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="article-excerpt">{{ article.body | slice : 0 : 150 }}...</p>
+
+        <div class="article-info">
+          <span class="info-tag">
+            <mat-icon>person</mat-icon>
+            {{ article.author.fullName }}
+          </span>
+          <span class="info-tag">
+            <mat-icon>calendar_today</mat-icon>
+            {{ formatDate(article.createdAt) }}
+          </span>
+          <span *ngIf="article.publishedAt" class="info-tag published">
+            <mat-icon>publish</mat-icon>
+            {{ formatDate(article.publishedAt) }}
+          </span>
+        </div>
+      </mat-card-content>
+
+      <!-- Article Actions -->
+      <mat-card-actions>
+        <div class="actions-group">
+          <button
+            mat-icon-button
+            matTooltip="View Article"
+            (click)="viewArticle(article)"
+            aria-label="View article"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <button
+            *ngIf="canEdit(article)"
+            mat-icon-button
+            matTooltip="Edit Article"
+            (click)="editArticle(article)"
+            aria-label="Edit article"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button
+            *ngIf="canPublish(article) && article.status === 'draft'"
+            mat-icon-button
+            matTooltip="Publish"
+            (click)="onPublish(article)"
+            aria-label="Publish article"
+            class="publish-btn"
+          >
+            <mat-icon>publish</mat-icon>
+          </button>
+
+          <button
+            *ngIf="canPublish(article) && article.status === 'published'"
+            mat-icon-button
+            matTooltip="Unpublish"
+            (click)="onUnpublish(article)"
+            aria-label="Unpublish article"
+            class="unpublish-btn"
+          >
+            <mat-icon>unpublished</mat-icon>
+          </button>
+
+          <button
+            *ngIf="canDelete(article)"
+            mat-icon-button
+            matTooltip="Delete"
+            (click)="onDelete(article)"
+            aria-label="Delete article"
+            class="delete-btn"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

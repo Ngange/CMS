@@ -26,10 +26,8 @@ class AuthService {
         role: user.role,
         profilePhoto: user.profilePhoto,
       },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -55,10 +53,8 @@ class AuthService {
         role: user.role,
         profilePhoto: user.profilePhoto,
       },
-      tokens: {
-        accessToken,
-        refreshToken,
-      },
+      accessToken,
+      refreshToken,
     };
   }
 

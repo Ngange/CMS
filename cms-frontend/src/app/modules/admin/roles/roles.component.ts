@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { RoleService } from '../../../core/services/role.service';
-import { Role, Permission } from '../../../core/models/role.model';
+import { Permission, Role } from '../../../core/models/role.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-roles',
@@ -12,18 +14,24 @@ export class RolesComponent implements OnInit {
   roles: Role[] = [];
   systemRoles: Role[] = [];
   customRoles: Role[] = [];
+
   roleForm: FormGroup;
-  isCreating = false;
-  isLoading = false;
   selectedRole: Role | null = null;
 
-  // Available permissions
+  isLoading = false;
+  isSaving = false;
+  errorMessage = '';
+  successMessage = '';
+  confirmDeleteId: string | null = null;
+
+  // Resources and actions available in the system
   resources = ['user', 'role', 'article'];
   actions = ['create', 'read', 'update', 'delete', 'publish'];
 
   constructor(
     private fb: FormBuilder,
-    private roleService: RoleService
+    private roleService: RoleService,
+    private authService: AuthService
   ) {
     this.roleForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -33,133 +41,231 @@ export class RolesComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initializePermissions();
     this.loadRoles();
   }
 
+  get permissionsArray(): FormArray {
+    return this.roleForm.get('permissions') as FormArray;
+  }
+
+  getActionIcon(action: string): string {
+    const icons: { [key: string]: string } = {
+      'create': 'add_circle',
+      'read': 'visibility',
+      'update': 'edit',
+      'delete': 'delete_forever',
+      'publish': 'publish'
+    };
+    return icons[action] || 'check_circle';
+  }
+
+  getActionColor(action: string): 'primary' | 'accent' | 'warn' {
+    const colors: { [key: string]: 'primary' | 'accent' | 'warn' } = {
+      'create': 'primary',
+      'read': 'accent',
+      'update': 'warn',
+      'delete': 'warn',
+      'publish': 'primary'
+    };
+    return colors[action] || 'accent';
+  }
+
+  getActionsControls(index: number): FormControl[] {
+    return (this.permissionsArray.at(index).get('actions') as FormArray).controls as FormControl[];
+  }
+
+  getResourceName(index: number): string {
+    return this.permissionsArray.at(index).get('resource')?.value;
+  }
+
   loadRoles(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
     this.roleService.getAllRoles().subscribe({
       next: (roles) => {
         this.roles = roles;
         this.systemRoles = roles.filter(role => role.isSystemRole);
         this.customRoles = roles.filter(role => !role.isSystemRole);
+        this.isLoading = false;
+      },
+      error: () => {
+        this.errorMessage = 'Failed to load roles';
+        this.isLoading = false;
       }
     });
   }
 
-  startCreating(): void {
-    this.isCreating = true;
-    this.selectedRole = null;
-    this.roleForm.reset();
-    this.initializePermissions();
+  get canCreate(): boolean {
+    return this.authService.hasPermission('role', 'create');
+  }
+
+  get canUpdate(): boolean {
+    return this.authService.hasPermission('role', 'update');
+  }
+
+  get canDelete(): boolean {
+    return this.authService.hasPermission('role', 'delete');
   }
 
   initializePermissions(): void {
-    const permissionsArray = this.roleForm.get('permissions') as any;
-    permissionsArray.clear();
-
+    this.permissionsArray.clear();
     this.resources.forEach(resource => {
-      const resourceGroup = this.fb.group({
-        resource: [resource],
-        actions: this.fb.array(this.actions.map(() => this.fb.control(false)))
-      });
-      permissionsArray.push(resourceGroup);
+      const actionsArray = this.actions.map(() => this.fb.control(false));
+      this.permissionsArray.push(
+        this.fb.group({
+          resource: [resource],
+          actions: this.fb.array(actionsArray)
+        })
+      );
     });
   }
 
-  onEditRole(role: Role): void {
-    this.selectedRole = role;
-    this.isCreating = true;
+  startCreate(): void {
+    this.selectedRole = null;
+    this.roleForm.reset();
+    this.initializePermissions();
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.confirmDeleteId = null;
+  }
 
+  editRole(role: Role): void {
+    if (role.isSystemRole) {
+      return; // System roles are read-only
+    }
+    this.selectedRole = role;
     this.roleForm.patchValue({
       name: role.name,
       description: role.description
     });
-
-    this.setPermissions(role.permissions);
+    this.setPermissions(role.permissions || []);
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.confirmDeleteId = null;
   }
 
   setPermissions(permissions: Permission[]): void {
-    const permissionsArray = this.roleForm.get('permissions') as any;
-    permissionsArray.clear();
+    this.permissionsArray.clear();
 
     this.resources.forEach(resource => {
       const resourcePermissions = permissions.find(p => p.resource === resource);
       const actionsArray = this.actions.map(action =>
-        this.fb.control(resourcePermissions?.actions.includes(action as any) || false)
+        this.fb.control(resourcePermissions?.actions?.includes(action as any) || false)
       );
 
-      const resourceGroup = this.fb.group({
-        resource: [resource],
-        actions: this.fb.array(actionsArray)
-      });
-
-      permissionsArray.push(resourceGroup);
+      this.permissionsArray.push(
+        this.fb.group({
+          resource: [resource],
+          actions: this.fb.array(actionsArray)
+        })
+      );
     });
   }
 
-  getPermissions(): any[] {
-    const permissions: any[] = [];
-    const permissionsArray = this.roleForm.get('permissions') as any;
+  private buildPermissionsPayload(): Permission[] {
+    const payload: Permission[] = [];
 
-    permissionsArray.controls.forEach((resourceGroup: any) => {
-      const resource = resourceGroup.get('resource').value;
+    this.permissionsArray.controls.forEach((group: any) => {
+      const resource = group.get('resource').value;
       const selectedActions = this.actions.filter((_, index) =>
-        resourceGroup.get('actions').controls[index].value
+        group.get('actions').controls[index].value
       );
 
       if (selectedActions.length > 0) {
-        permissions.push({
-          resource,
-          actions: selectedActions
-        });
+        payload.push({ resource, actions: selectedActions as any });
       }
     });
 
-    return permissions;
+    return payload;
   }
 
-  onSubmit(): void {
-    if (this.roleForm.valid) {
-      this.isLoading = true;
-
-      const roleData = {
-        name: this.roleForm.get('name')?.value,
-        description: this.roleForm.get('description')?.value,
-        permissions: this.getPermissions(),
-        isSystemRole: false
-      };
-
-      if (this.selectedRole) {
-        // Update existing role
-        this.roleService.updateRole(this.selectedRole._id, roleData).subscribe({
-          next: () => {
-            this.resetForm();
-            this.loadRoles();
-          },
-          error: () => {
-            this.isLoading = false;
-          }
-        });
-      } else {
-        // Create new role
-        this.roleService.createRole(roleData).subscribe({
-          next: () => {
-            this.resetForm();
-            this.loadRoles();
-          },
-          error: () => {
-            this.isLoading = false;
-          }
-        });
-      }
+  submit(): void {
+    if (this.roleForm.invalid) {
+      this.roleForm.markAllAsTouched();
+      return;
     }
+
+    // Permission gate
+    if (!this.selectedRole && !this.canCreate) {
+      this.errorMessage = 'You do not have permission to create roles.';
+      return;
+    }
+    if (this.selectedRole && !this.canUpdate) {
+      this.errorMessage = 'You do not have permission to update roles.';
+      return;
+    }
+
+    const roleData: Partial<Role> = {
+      name: this.roleForm.get('name')?.value,
+      description: this.roleForm.get('description')?.value,
+      permissions: this.buildPermissionsPayload(),
+      isSystemRole: false
+    };
+
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    const request$ = this.selectedRole
+      ? this.roleService.updateRole(this.selectedRole._id, roleData as Role)
+      : this.roleService.createRole(roleData as Role);
+
+    request$
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: () => {
+          this.successMessage = this.selectedRole ? 'Role updated' : 'Role created';
+          this.startCreate();
+          this.loadRoles();
+        },
+        error: () => {
+          this.errorMessage = this.selectedRole ? 'Failed to update role' : 'Failed to create role';
+        }
+      });
   }
 
-  resetForm(): void {
-    this.isCreating = false;
-    this.selectedRole = null;
-    this.isLoading = false;
-    this.roleForm.reset();
+  requestDelete(role: Role): void {
+    if (role.isSystemRole || this.isSaving) {
+      return; // Prevent deleting system roles or concurrent ops
+    }
+
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete roles.';
+      return;
+    }
+
+    // First click toggles confirm UI
+    if (this.confirmDeleteId !== role._id) {
+      this.confirmDeleteId = role._id;
+      this.successMessage = '';
+      this.errorMessage = '';
+      return;
+    }
+
+    // Second click confirms deletion
+    this.isSaving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.roleService.deleteRole(role._id)
+      .pipe(finalize(() => (this.isSaving = false)))
+      .subscribe({
+        next: () => {
+          this.successMessage = 'Role deleted';
+          this.confirmDeleteId = null;
+          this.loadRoles();
+        },
+        error: () => {
+          this.errorMessage = 'Failed to delete role';
+          this.confirmDeleteId = null;
+        }
+      });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 
   canEditRole(role: Role): boolean {

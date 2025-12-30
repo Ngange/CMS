@@ -13,6 +13,8 @@ export class ArticleCreateComponent {
   isLoading = false;
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
+  successMessage = '';
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -28,7 +30,14 @@ export class ArticleCreateComponent {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        this.errorMessage = 'Please select a valid image file';
+        return;
+      }
+
       this.selectedFile = file;
+      this.errorMessage = '';
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -46,6 +55,8 @@ export class ArticleCreateComponent {
   onSubmit(): void {
     if (this.articleForm.valid) {
       this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
 
       const formData = new FormData();
       formData.append('title', this.articleForm.get('title')?.value);
@@ -57,16 +68,39 @@ export class ArticleCreateComponent {
 
       this.articleService.createArticle(formData).subscribe({
         next: () => {
-          this.router.navigate(['/articles']);
+          this.successMessage = 'Article created successfully';
+          setTimeout(() => {
+            this.router.navigate(['/articles']);
+          }, 1500);
         },
-        error: () => {
+        error: (error) => {
+          console.error('Failed to create article:', error);
           this.isLoading = false;
+          this.errorMessage = error.error?.message || 'Failed to create article';
         }
       });
     }
   }
 
   onCancel(): void {
-    this.router.navigate(['/articles']);
+    if (this.articleForm.dirty) {
+      if (confirm('Are you sure you want to discard your changes?')) {
+        this.router.navigate(['/articles']);
+      }
+    } else {
+      this.router.navigate(['/articles']);
+    }
+  }
+
+  get selectedFileName(): string {
+    return this.selectedFile?.name || '';
+  }
+
+  get titleCharCount(): number {
+    return this.articleForm.get('title')?.value?.length || 0;
+  }
+
+  get bodyCharCount(): number {
+    return this.articleForm.get('body')?.value?.length || 0;
   }
 }

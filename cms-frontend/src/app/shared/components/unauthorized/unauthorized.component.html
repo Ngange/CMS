@@ -1,1 +1,18 @@
-<p>unauthorized works!</p>
+<div class="unauthorized-container">
+  <div class="error-card">
+    <mat-icon class="error-icon">block</mat-icon>
+    <h1>403</h1>
+    <h2>Access Denied</h2>
+    <p>You don't have permission to access this page.</p>
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="goHome()">
+        <mat-icon>home</mat-icon>
+        Go to Home
+      </button>
+      <button mat-raised-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Go Back
+      </button>
+    </div>
+  </div>
+</div>

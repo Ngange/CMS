@@ -1,0 +1,85 @@
+<div class="article-view-container">
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading article...</p>
+  </div>
+
+  <div *ngIf="errorMessage && !isLoading" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <h2>{{ errorMessage }}</h2>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Articles
+    </button>
+  </div>
+
+  <div *ngIf="article && !isLoading" class="article-content">
+    <div class="article-header">
+      <button mat-icon-button (click)="goBack()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-actions">
+        <button
+          *ngIf="canEdit"
+          mat-raised-button
+          color="primary"
+          (click)="editArticle()"
+        >
+          <mat-icon>edit</mat-icon>
+          Edit Article
+        </button>
+      </div>
+    </div>
+
+    <article class="article-body">
+      <div *ngIf="article.image" class="article-cover-image">
+        <img
+          [src]="getImageUrl(article.image)"
+          [alt]="article.title"
+          crossorigin="anonymous"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="article-meta-header">
+        <h1>{{ article.title }}</h1>
+
+        <div class="article-info">
+          <div class="info-item">
+            <mat-icon>person</mat-icon>
+            <span>{{ article.author.fullName }}</span>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{
+              article.publishedAt || article.createdAt | date : "MMMM d, y"
+            }}</span>
+          </div>
+
+          <div class="info-item">
+            <span
+              class="status-badge"
+              [class.published]="article.status === 'published'"
+              [class.draft]="article.status === 'draft'"
+            >
+              {{ article.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-text">
+        <p>{{ article.body }}</p>
+      </div>
+
+      <div class="article-footer">
+        <div class="footer-info">
+          <p class="last-updated" *ngIf="article.updatedAt">
+            Last updated: {{ article.updatedAt | date : "medium" }}
+          </p>
+        </div>
+      </div>
+    </article>
+  </div>
+</div>

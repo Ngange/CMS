@@ -12,11 +12,10 @@ import { Role } from '../../../core/models/role.model';
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
-  roles: Role[] = [];
   isLoading = false;
+  isLoadingRoles = true;
   errorMessage = '';
-  selectedFile: File | null = null;
-  previewUrl: string | ArrayBuffer | null = null;
+  private viewerRoleId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -27,9 +26,7 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.fb.group({
       fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      roleId: ['', Validators.required],
-      profilePhoto: ['']
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -38,55 +35,65 @@ export class RegisterComponent implements OnInit {
   }
 
   loadRoles(): void {
-    this.roleService.getAllRoles().subscribe({
+    this.isLoadingRoles = true;
+    this.authService.getSystemRoles().subscribe({
       next: (roles) => {
-        // Filter out SuperAdmin role for registration
-        this.roles = roles.filter(role => role.name !== 'SuperAdmin');
+        console.log('Roles loaded:', roles);
+        // Find and store VIEWER role ID
+        const viewerRole = roles.find(role => role.name === 'Viewer');
+        if (viewerRole) {
+          this.viewerRoleId = viewerRole._id;
+          console.log('Viewer role ID set to:', this.viewerRoleId);
+        } else {
+          console.error('Viewer role not found in roles');
+          this.errorMessage = 'Viewer role not available. Please contact admin.';
+        }
+        this.isLoadingRoles = false;
       },
       error: (error) => {
         console.error('Failed to load roles:', error);
+        this.errorMessage = 'Failed to load system roles. Please refresh the page.';
+        this.isLoadingRoles = false;
       }
     });
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.previewUrl = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
   onSubmit(): void {
-    if (this.registerForm.valid) {
-      this.isLoading = true;
-      this.errorMessage = '';
+    console.log('Submit clicked - Form valid:', this.registerForm.valid, 'ViewerRoleId:', this.viewerRoleId);
 
-      const formData = new FormData();
-      formData.append('fullName', this.registerForm.get('fullName')?.value);
-      formData.append('email', this.registerForm.get('email')?.value);
-      formData.append('password', this.registerForm.get('password')?.value);
-      formData.append('roleId', this.registerForm.get('roleId')?.value);
-
-      if (this.selectedFile) {
-        formData.append('profilePhoto', this.selectedFile);
-      }
-
-      this.authService.register(formData).subscribe({
-        next: () => {
-          this.router.navigate(['/login']);
-        },
-        error: (error) => {
-          this.errorMessage = error.error?.message || 'Registration failed';
-          this.isLoading = false;
-        }
-      });
+    if (!this.registerForm.valid) {
+      console.error('Form is invalid');
+      return;
     }
+
+    if (!this.viewerRoleId) {
+      console.error('Viewer role ID not loaded');
+      this.errorMessage = 'System roles not loaded. Please refresh the page.';
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const registerData = {
+      fullName: this.registerForm.get('fullName')?.value,
+      email: this.registerForm.get('email')?.value,
+      password: this.registerForm.get('password')?.value,
+      roleId: this.viewerRoleId
+    };
+
+    console.log('Submitting registration with data:', registerData);
+
+    this.authService.register(registerData).subscribe({
+      next: () => {
+        console.log('Registration successful');
+        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        console.error('Registration error:', error);
+        this.errorMessage = error.error?.message || 'Registration failed';
+        this.isLoading = false;
+      }
+    });
   }
 }

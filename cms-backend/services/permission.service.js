@@ -15,6 +15,17 @@ class PermissionService {
     return role;
   }
 
+  static async deleteRole(roleId) {
+    // Prevent deleting system roles
+    const role = await Role.findById(roleId);
+    if (!role) return null;
+    if (role.isSystemRole) {
+      throw new Error('Cannot delete system role');
+    }
+    await Role.findByIdAndDelete(roleId);
+    return role;
+  }
+
   static async getAllRoles() {
     return await Role.find();
   }

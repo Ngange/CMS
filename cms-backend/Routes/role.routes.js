@@ -6,6 +6,7 @@ const {
   getAllRoles,
   createRole,
   updateRole,
+  deleteRole,
 } = require('../controllers/role.controller');
 
 router.get('/', authenticateToken, getAllRoles);
@@ -20,6 +21,13 @@ router.put(
   authenticateToken,
   checkPermission('role', 'update'),
   updateRole
+);
+
+router.delete(
+  '/:roleId',
+  authenticateToken,
+  checkPermission('role', 'delete'),
+  deleteRole
 );
 
 module.exports = router;

@@ -1,1 +1,197 @@
-<p>dashboard works!</p>
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1>{{ greeting }}</h1>
+    <p class="subtitle">Welcome to your dashboard</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="dashboard-content">
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon-wrapper total">
+            <mat-icon>article</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>Total Articles</h3>
+            <p class="stat-value">{{ stats.totalArticles }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card">
+        <mat-card-content>
+          <div class="stat-icon-wrapper published">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>Published</h3>
+            <p class="stat-value">{{ stats.publishedArticles }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="stat-card" *ngIf="canAccessDrafts()">
+        <mat-card-content>
+          <div class="stat-icon-wrapper draft">
+            <mat-icon>edit_note</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>Drafts</h3>
+            <p class="stat-value">{{ stats.draftArticles }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card
+        class="stat-card"
+        *ngIf="currentUser?.role?.name === ROLE_NAMES.CONTRIBUTOR"
+      >
+        <mat-card-content>
+          <div class="stat-icon-wrapper mine">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="stat-details">
+            <h3>My Articles</h3>
+            <p class="stat-value">{{ stats.myArticles }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <button
+          mat-raised-button
+          color="primary"
+          class="action-btn"
+          (click)="navigateTo('/articles')"
+        >
+          <mat-icon>article</mat-icon>
+          View Articles
+        </button>
+
+        <button
+          *appHasPermission="'article:create'"
+          mat-raised-button
+          color="accent"
+          class="action-btn"
+          (click)="navigateTo('/articles/create')"
+        >
+          <mat-icon>add_circle</mat-icon>
+          New Article
+        </button>
+
+        <button
+          mat-raised-button
+          class="action-btn"
+          (click)="navigateTo('/profile')"
+        >
+          <mat-icon>person</mat-icon>
+          My Profile
+        </button>
+
+        <button
+          *appHasPermission="'user:read'"
+          mat-raised-button
+          class="action-btn"
+          (click)="navigateTo('/admin/users')"
+        >
+          <mat-icon>people</mat-icon>
+          Manage Users
+        </button>
+
+        <button
+          *appHasPermission="'role:read'"
+          mat-raised-button
+          class="action-btn"
+          (click)="navigateTo('/admin/roles')"
+        >
+          <mat-icon>admin_panel_settings</mat-icon>
+          Manage Roles
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Articles -->
+    <div class="recent-articles-section">
+      <div class="section-header">
+        <h2>Recent Articles</h2>
+        <button mat-button color="primary" (click)="navigateTo('/articles')">
+          View All
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+
+      <div *ngIf="recentArticles.length === 0" class="empty-state">
+        <mat-icon>article</mat-icon>
+        <p>No articles yet</p>
+        <button
+          *appHasPermission="'article:create'"
+          mat-raised-button
+          color="primary"
+          (click)="navigateTo('/articles/create')"
+        >
+          Create Your First Article
+        </button>
+      </div>
+
+      <div *ngIf="recentArticles.length > 0" class="articles-list">
+        <mat-card
+          *ngFor="let article of recentArticles"
+          class="article-card"
+          (click)="viewArticle(article._id)"
+        >
+          <div *ngIf="article.image" class="card-image">
+            <img
+              [src]="getImageUrl(article.image)"
+              [alt]="article.title"
+              crossorigin="anonymous"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+            />
+          </div>
+          <mat-card-header>
+            <mat-card-title>{{ article.title }}</mat-card-title>
+            <mat-card-subtitle>
+              <span class="author">{{ article.author.fullName }}</span>
+              <span
+                class="status-chip"
+                [ngClass]="getStatusClass(article.status)"
+              >
+                {{ article.status }}
+              </span>
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="article-excerpt">
+              {{ article.body.substring(0, 150)
+              }}{{ article.body.length > 150 ? "..." : "" }}
+            </p>
+            <div class="article-meta">
+              <span class="meta-item">
+                <mat-icon>schedule</mat-icon>
+                {{ article.createdAt | date : "mediumDate" }}
+              </span>
+              <span class="meta-item" *ngIf="article.publishedAt">
+                <mat-icon>publish</mat-icon>
+                {{ article.publishedAt | date : "mediumDate" }}
+              </span>
+              <span class="meta-item">
+                <mat-icon>visibility</mat-icon>
+                {{ article.views || 0 }}
+              </span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</div>

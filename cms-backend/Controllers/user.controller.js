@@ -1,5 +1,6 @@
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
+const bcrypt = require('bcryptjs');
 
 // Helper function to check SuperAdmin permission
 const isSuperAdmin = (user) => user.role.name === 'SuperAdmin';
@@ -20,6 +21,76 @@ const getAllUsers = async (req, res) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Create user (SuperAdmin only)
+const createUser = async (req, res) => {
+  try {
+    if (!isSuperAdmin(req.user)) {
+      return res.status(403).json({
+        message: 'Access denied. SuperAdmin only.',
+      });
+    }
+
+    const {
+      fullName,
+      email,
+      password,
+      role,
+      isActive = true,
+      profilePhoto,
+    } = req.body;
+
+    if (!fullName || !email || !password || !role) {
+      return res
+        .status(400)
+        .json({ message: 'fullName, email, password, and role are required' });
+    }
+
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const roleDoc = await Role.findById(role);
+    if (!roleDoc) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+
+    const user = new User({
+      fullName,
+      email,
+      password,
+      role,
+      isActive,
+      profilePhoto,
+    });
+
+    await user.save();
+
+    const populated = await User.findById(user._id)
+      .populate('role', 'name description permissions')
+      .select('-password');
+
+    res.status(201).json(populated);
+  } catch (error) {
+    if (error.code === 11000) {
+      // Duplicate key error, surface a friendly message
+      const field = Object.keys(error.keyPattern || {})[0] || 'field';
+      const message =
+        field === 'email'
+          ? 'Email already exists'
+          : `Duplicate value for ${field}. Check existing records or indexes.`;
+      return res.status(400).json({ message });
+    }
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -73,6 +144,7 @@ const updateUser = async (req, res) => {
       'role',
       'isActive',
       'profilePhoto',
+      'password',
     ];
     const filteredUpdates = {};
 
@@ -81,6 +153,11 @@ const updateUser = async (req, res) => {
         filteredUpdates[key] = updates[key];
       }
     });
+
+    // Handle file upload
+    if (req.file) {
+      filteredUpdates.profilePhoto = req.file.path;
+    }
 
     // Validate role if being updated
     if (filteredUpdates.role) {
@@ -99,6 +176,12 @@ const updateUser = async (req, res) => {
       if (existingUser) {
         return res.status(400).json({ message: 'Email already exists' });
       }
+    }
+
+    // Hash password if provided (findByIdAndUpdate doesn't trigger pre-save hook)
+    if (filteredUpdates.password) {
+      const salt = await bcrypt.genSalt(10);
+      filteredUpdates.password = await bcrypt.hash(filteredUpdates.password, salt);
     }
 
     const user = await User.findByIdAndUpdate(userId, filteredUpdates, {
@@ -191,6 +274,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
   getAllUsers,
   getUserById,
+  createUser,
   updateUser,
   toggleUserStatus,
   deleteUser,
