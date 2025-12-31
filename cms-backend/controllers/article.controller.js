@@ -59,11 +59,15 @@ const getArticle = async (req, res) => {
 
 const updateArticle = async (req, res) => {
   try {
-    const { title, body, image } = req.body;
+    const { title, body, image, status } = req.body;
     const updateData = { title, body };
 
-    if (image !== undefined) {
-      updateData.image = image || null; // Cloudinary URL or clear when null/empty
+    // Always include image (Cloudinary URL, or null to clear)
+    updateData.image = image || null;
+
+    // Include status if provided
+    if (status) {
+      updateData.status = status;
     }
 
     const article = await Article.findByIdAndUpdate(req.params.id, updateData, {
