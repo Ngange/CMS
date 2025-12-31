@@ -17,6 +17,11 @@ export class AuthInterceptor implements HttpInterceptor {
   ) { }
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    // Skip auth header for Cloudinary uploads (unsigned)
+    if (req.url.includes('api.cloudinary.com')) {
+      return next.handle(req);
+    }
+
     const accessToken = this.authService.getAccessToken();
 
     if (accessToken) {
