@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ArticleService } from '../../../core/services/article.service';
@@ -30,7 +30,8 @@ export class NavbarComponent {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    private elementRef: ElementRef
   ) { }
 
   toggleMenu(): void {
@@ -44,11 +45,24 @@ export class NavbarComponent {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
-    const dropdown = target.closest('.user-dropdown');
 
+    // Close all menus when clicking outside the navbar
+    if (!this.elementRef.nativeElement.contains(target)) {
+      this.isMenuOpen = false;
+      this.isDropdownOpen = false;
+      return;
+    }
+
+    // Close dropdown when clicking elsewhere inside the navbar
+    const dropdown = target.closest('.user-dropdown');
     if (!dropdown && this.isDropdownOpen) {
       this.isDropdownOpen = false;
     }
+  }
+
+  onLinkClick(): void {
+    this.isMenuOpen = false;
+    this.isDropdownOpen = false;
   }
 
   getImageUrl(imagePath: string | undefined): string | null {
@@ -60,6 +74,7 @@ export class NavbarComponent {
   }
 
   logout(): void {
+    this.onLinkClick();
     this.authService.logout().subscribe(() => {
       this.router.navigate(['/login']);
     });

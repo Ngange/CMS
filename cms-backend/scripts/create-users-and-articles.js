@@ -1,8 +1,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('../models/user.model');
-const Role = require('../models/role.model');
-const Article = require('../models/article.model');
+const User = require('../Models/user.model');
+const Role = require('../Models/role.model');
+const Article = require('../Models/article.model');
 
 const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cms_db';
 
@@ -295,9 +295,7 @@ const createUsersAndArticles = async () => {
       const fullName = (user.fullName || 'N/A').padEnd(20);
       const email = (user.email || 'N/A').padEnd(25);
       const roleName = user.role?.name || 'No Role';
-      console.log(
-        `${fullName} - ${email} - Role: ${roleName}`
-      );
+      console.log(`${fullName} - ${email} - Role: ${roleName}`);
     });
 
     // Generate and create new articles
@@ -327,9 +325,7 @@ const createUsersAndArticles = async () => {
       articlesCreated++;
     }
 
-    console.log(
-      `\nArticles created: ${articlesCreated}`
-    );
+    console.log(`\nArticles created: ${articlesCreated}`);
 
     // Show statistics
     console.log('\n=== Database Statistics ===');
@@ -356,9 +352,7 @@ const createUsersAndArticles = async () => {
       if (author) {
         const authorName = (author.fullName || 'N/A').padEnd(20);
         const roleName = author.role?.name || 'No Role';
-        console.log(
-          `${authorName} (${roleName}): ${stat.count} articles`
-        );
+        console.log(`${authorName} (${roleName}): ${stat.count} articles`);
       }
     }
 

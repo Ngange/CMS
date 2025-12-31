@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth.middleware');
+const { authenticateToken } = require('../Middleware/auth.middleware');
 const {
   register,
   login,
@@ -9,10 +9,10 @@ const {
   getProfile,
   updateProfile,
   changePassword,
-} = require('../controllers/auth.controller');
+} = require('../Controllers/auth.controller');
 const {
   refreshAccessToken,
-} = require('../controllers/refresh-token.controller');
+} = require('../Controllers/refresh-token.controller');
 
 // Public routes
 router.post('/register', register);

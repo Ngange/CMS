@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth.middleware');
-const { checkPermission } = require('../middleware/authorization.middleware');
+const { authenticateToken } = require('../Middleware/auth.middleware');
+const { checkPermission } = require('../Middleware/authorization.middleware');
 const {
   getAllRoles,
   createRole,
   updateRole,
   deleteRole,
-} = require('../controllers/role.controller');
+} = require('../Controllers/role.controller');
 
 router.get('/', authenticateToken, getAllRoles);
 router.post(

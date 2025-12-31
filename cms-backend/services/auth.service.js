@@ -1,5 +1,5 @@
-const User = require('../models/user.model');
-const Role = require('../models/role.model');
+const User = require('../Models/user.model');
+const Role = require('../Models/role.model');
 const { generateAccessToken, generateRefreshToken } = require('../config/jwt');
 
 class AuthService {

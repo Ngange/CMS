@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/upload.middleware');
-const { authenticateToken } = require('../middleware/auth.middleware');
-const { checkPermission } = require('../middleware/authorization.middleware');
+const upload = require('../Middleware/upload.middleware');
+const { authenticateToken } = require('../Middleware/auth.middleware');
+const { checkPermission } = require('../Middleware/authorization.middleware');
 const {
   createArticle,
   getArticles,
@@ -11,7 +11,7 @@ const {
   deleteArticle,
   publishArticle,
   unpublishArticle,
-} = require('../controllers/article.controller');
+} = require('../Controllers/article.controller');
 
 router.get('/', authenticateToken, getArticles);
 router.get('/:id', authenticateToken, getArticle);

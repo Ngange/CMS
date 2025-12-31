@@ -20,6 +20,7 @@
             class="nav-link"
             [routerLink]="item.route"
             routerLinkActive="active"
+            (click)="onLinkClick()"
           >
             <mat-icon>{{ item.icon }}</mat-icon>
             {{ item.label }}
@@ -43,7 +44,11 @@
             <mat-icon>arrow_drop_down</mat-icon>
           </button>
           <div class="dropdown-menu" [class.show]="isDropdownOpen">
-            <a routerLink="/profile" class="dropdown-item">
+            <a
+              routerLink="/profile"
+              class="dropdown-item"
+              (click)="onLinkClick()"
+            >
               <mat-icon>person</mat-icon> Profile
             </a>
             <div class="dropdown-divider"></div>

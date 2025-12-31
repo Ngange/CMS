@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth.middleware');
-const { checkPermission } = require('../middleware/authorization.middleware');
-const upload = require('../middleware/upload.middleware');
+const { authenticateToken } = require('../Middleware/auth.middleware');
+const { checkPermission } = require('../Middleware/authorization.middleware');
+const upload = require('../Middleware/upload.middleware');
 const {
   getAllUsers,
   getUserById,
@@ -10,7 +10,7 @@ const {
   updateUser,
   toggleUserStatus,
   deleteUser,
-} = require('../controllers/user.controller');
+} = require('../Controllers/user.controller');
 
 // All routes require authentication
 router.use(authenticateToken);

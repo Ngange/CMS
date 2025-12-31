@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('../models/user.model');
-const Role = require('../models/role.model');
+const User = require('../Models/user.model');
+const Role = require('../Models/role.model');
 
 const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cms_db';
 
