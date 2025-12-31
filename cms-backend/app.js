@@ -3,11 +3,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const roleRoutes = require('./routes/role.routes');
-const articleRoutes = require('./routes/article.routes');
-const profileRoutes = require('./routes/profile.routes');
+// Note: Render/Linux file system is case-sensitive; folder is "Routes".
+const authRoutes = require('./Routes/auth.routes');
+const userRoutes = require('./Routes/user.routes');
+const roleRoutes = require('./Routes/role.routes');
+const articleRoutes = require('./Routes/article.routes');
+const profileRoutes = require('./Routes/profile.routes');
 
 const app = express();
 
