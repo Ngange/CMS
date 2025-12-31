@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ArticleService } from '../../core/services/article.service';
+import { CloudinaryService } from '../../core/services/cloudinary.service';
 import { User } from '../../core/models/user.model';
 
 @Component({
@@ -15,8 +16,9 @@ export class ProfileComponent implements OnInit {
   currentUser: User | null = null;
   isEditing = false;
   isLoading = false;
-  selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
+  uploadedImageUrl: string | null = null;
+  isUploadingImage = false;
   passwordChangeMode = false;
   successMessage = '';
   errorMessage = '';
@@ -24,7 +26,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private articleService: ArticleService
+    private articleService: ArticleService,
+    private cloudinaryService: CloudinaryService
   ) {
     this.profileForm = this.fb.group({
       fullName: ['', Validators.required],
@@ -51,6 +54,7 @@ export class ProfileComponent implements OnInit {
           email: user.email
         });
         // Use getImageUrl to resolve the profile photo path
+        this.uploadedImageUrl = user.profilePhoto || null;
         this.previewUrl = user.profilePhoto
           ? this.articleService.getImageUrl(user.profilePhoto)
           : null;
@@ -71,41 +75,49 @@ export class ProfileComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
+      if (!file.type.startsWith('image/')) {
+        this.errorMessage = 'Please select a valid image file';
+        return;
+      }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.previewUrl = reader.result;
-      };
-      reader.readAsDataURL(file);
+      this.isUploadingImage = true;
+      this.cloudinaryService.uploadImage(file).subscribe({
+        next: (url) => {
+          this.uploadedImageUrl = url;
+          this.previewUrl = url;
+          this.isUploadingImage = false;
+        },
+        error: (error) => {
+          console.error('Failed to upload profile photo:', error);
+          this.errorMessage = 'Failed to upload profile photo';
+          this.isUploadingImage = false;
+        },
+      });
     }
   }
 
   removeProfilePhoto(): void {
-    this.selectedFile = null;
     this.previewUrl = null;
+    this.uploadedImageUrl = null;
   }
 
   onUpdateProfile(): void {
-    if (this.profileForm.valid) {
+    if (this.profileForm.valid && !this.isUploadingImage) {
       this.isLoading = true;
       this.successMessage = '';
       this.errorMessage = '';
 
-      const formData = new FormData();
-      formData.append('fullName', this.profileForm.get('fullName')?.value);
-      formData.append('email', this.profileForm.get('email')?.value);
+      const payload = {
+        fullName: this.profileForm.get('fullName')?.value,
+        email: this.profileForm.get('email')?.value,
+        profilePhoto: this.uploadedImageUrl,
+      };
 
-      if (this.selectedFile) {
-        formData.append('profilePhoto', this.selectedFile);
-      }
-
-      this.authService.updateProfile(formData).subscribe({
+      this.authService.updateProfile(payload).subscribe({
         next: () => {
           this.isEditing = false;
           this.isLoading = false;
           this.successMessage = 'Profile updated successfully';
-          this.selectedFile = null;
           setTimeout(() => this.successMessage = '', 3000);
         },
         error: (error) => {
@@ -150,7 +162,6 @@ export class ProfileComponent implements OnInit {
 
   cancelEdit(): void {
     this.isEditing = false;
-    this.selectedFile = null;
     this.loadUserProfile();
   }
 }

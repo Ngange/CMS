@@ -3,24 +3,30 @@ import { ArticleCreateComponent } from './article-create.component';
 import { ArticleService } from '../../../core/services/article.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 
 describe('ArticleCreateComponent', () => {
   let component: ArticleCreateComponent;
   let fixture: ComponentFixture<ArticleCreateComponent>;
   let articleService: jasmine.SpyObj<ArticleService>;
+  let cloudinaryService: jasmine.SpyObj<CloudinaryService>;
 
   beforeEach(async () => {
     const articleServiceSpy = jasmine.createSpyObj('ArticleService', ['createArticle']);
+    const cloudinaryServiceSpy = jasmine.createSpyObj('CloudinaryService', ['uploadImage']);
+    cloudinaryServiceSpy.uploadImage.and.returnValue(of('https://cloudinary.com/example.jpg'));
 
     await TestBed.configureTestingModule({
       declarations: [ArticleCreateComponent],
       imports: [ReactiveFormsModule],
       providers: [
-        { provide: ArticleService, useValue: articleServiceSpy }
+        { provide: ArticleService, useValue: articleServiceSpy },
+        { provide: CloudinaryService, useValue: cloudinaryServiceSpy }
       ]
     }).compileComponents();
 
     articleService = TestBed.inject(ArticleService) as jasmine.SpyObj<ArticleService>;
+    cloudinaryService = TestBed.inject(CloudinaryService) as jasmine.SpyObj<CloudinaryService>;
     fixture = TestBed.createComponent(ArticleCreateComponent);
     component = fixture.componentInstance;
   });
@@ -64,8 +70,8 @@ describe('ArticleCreateComponent', () => {
 
     component.onFileSelected(event);
 
-    expect(component.selectedFile).toBe(file);
-    expect(component.previewUrl).toBeTruthy();
+    expect(cloudinaryService.uploadImage).toHaveBeenCalledWith(file);
+    expect(component.uploadedImageUrl).toBe('https://cloudinary.com/example.jpg');
   });
 
   it('should reject non-image files', () => {
@@ -75,17 +81,17 @@ describe('ArticleCreateComponent', () => {
     component.onFileSelected(event);
 
     expect(component.errorMessage).toBeTruthy();
-    expect(component.selectedFile).toBeNull();
+    expect(component.uploadedImageUrl).toBeNull();
   });
 
   it('should remove selected image', () => {
-    component.selectedFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-    component.previewUrl = 'data:image/jpeg;base64,...';
+    component.uploadedImageUrl = 'https://cloudinary.com/example.jpg';
+    component.previewUrl = 'https://cloudinary.com/example.jpg';
 
     component.removeImage();
 
-    expect(component.selectedFile).toBeNull();
     expect(component.previewUrl).toBeNull();
+    expect(component.uploadedImageUrl).toBeNull();
   });
 
   it('should submit form with valid data', () => {
@@ -98,6 +104,10 @@ describe('ArticleCreateComponent', () => {
 
     component.onSubmit();
 
-    expect(articleService.createArticle).toHaveBeenCalled();
+    expect(articleService.createArticle).toHaveBeenCalledWith({
+      title: 'Test Article',
+      body: 'This is a test body content for the article',
+      image: null,
+    });
   });
 });

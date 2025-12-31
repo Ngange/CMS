@@ -33,9 +33,9 @@ const updateMyProfile = async (req, res) => {
     const updates = req.body;
     const userId = req.user._id;
 
-    // Handle file upload
-    if (req.file) {
-      updates.profilePhoto = req.file.path;
+    // Expect Cloudinary URL from client; allow clearing by sending null/empty
+    if (updates.profilePhoto !== undefined) {
+      updates.profilePhoto = updates.profilePhoto || null;
     }
 
     // Remove fields that users shouldn't be able to update themselves

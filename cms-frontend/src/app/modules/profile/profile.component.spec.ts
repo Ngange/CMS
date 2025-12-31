@@ -8,11 +8,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { of, throwError } from 'rxjs';
+import { ArticleService } from '../../core/services/article.service';
+import { CloudinaryService } from '../../core/services/cloudinary.service';
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
   let authService: jasmine.SpyObj<AuthService>;
+  let cloudinaryService: jasmine.SpyObj<CloudinaryService>;
 
   beforeEach(async () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', [
@@ -20,6 +23,12 @@ describe('ProfileComponent', () => {
       'updateProfile',
       'changePassword'
     ]);
+
+    const articleServiceSpy = jasmine.createSpyObj('ArticleService', ['getImageUrl']);
+    articleServiceSpy.getImageUrl.and.callFake((path: string) => path);
+
+    const cloudinaryServiceSpy = jasmine.createSpyObj('CloudinaryService', ['uploadImage']);
+    cloudinaryServiceSpy.uploadImage.and.returnValue(of('https://cloudinary.com/example.jpg'));
 
     await TestBed.configureTestingModule({
       declarations: [ProfileComponent],
@@ -32,11 +41,14 @@ describe('ProfileComponent', () => {
         MatIconModule
       ],
       providers: [
-        { provide: AuthService, useValue: authServiceSpy }
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: ArticleService, useValue: articleServiceSpy },
+        { provide: CloudinaryService, useValue: cloudinaryServiceSpy }
       ]
     }).compileComponents();
 
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    cloudinaryService = TestBed.inject(CloudinaryService) as jasmine.SpyObj<CloudinaryService>;
     fixture = TestBed.createComponent(ProfileComponent);
     component = fixture.componentInstance;
   });
@@ -92,7 +104,8 @@ describe('ProfileComponent', () => {
 
     component.onFileSelected(event);
 
-    expect(component.selectedFile).toBe(file);
+    expect(cloudinaryService.uploadImage).toHaveBeenCalledWith(file);
+    expect(component.uploadedImageUrl).toBe('https://cloudinary.com/example.jpg');
   });
 
   it('should handle password change error', () => {

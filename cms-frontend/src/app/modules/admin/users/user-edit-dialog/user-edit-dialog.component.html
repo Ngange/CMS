@@ -162,7 +162,7 @@
     mat-raised-button
     color="primary"
     (click)="onSubmit()"
-    [disabled]="!editForm.valid"
+    [disabled]="!editForm.valid || isUploadingImage"
   >
     Save Changes
   </button>

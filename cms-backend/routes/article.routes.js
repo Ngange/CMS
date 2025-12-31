@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/upload.middleware');
 const { authenticateToken } = require('../middleware/auth.middleware');
 const { checkPermission } = require('../middleware/authorization.middleware');
 const {
@@ -19,14 +18,12 @@ router.post(
   '/',
   authenticateToken,
   checkPermission('article', 'create'),
-  upload.single('image'),
   createArticle
 );
 router.put(
   '/:id',
   authenticateToken,
   checkPermission('article', 'update'),
-  upload.single('image'),
   updateArticle
 );
 router.delete(

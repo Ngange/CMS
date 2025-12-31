@@ -4,17 +4,22 @@ import { ArticleService } from '../../../core/services/article.service';
 import { ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 
 describe('ArticleEditComponent', () => {
   let component: ArticleEditComponent;
   let fixture: ComponentFixture<ArticleEditComponent>;
   let articleService: jasmine.SpyObj<ArticleService>;
+  let cloudinaryService: jasmine.SpyObj<CloudinaryService>;
 
   beforeEach(async () => {
     const articleServiceSpy = jasmine.createSpyObj('ArticleService', [
       'getArticleById',
       'updateArticle'
     ]);
+
+    const cloudinaryServiceSpy = jasmine.createSpyObj('CloudinaryService', ['uploadImage']);
+    cloudinaryServiceSpy.uploadImage.and.returnValue(of('https://cloudinary.com/example.jpg'));
 
     const activatedRouteSpy = {
       snapshot: { paramMap: { get: () => '1' } }
@@ -25,11 +30,13 @@ describe('ArticleEditComponent', () => {
       imports: [ReactiveFormsModule],
       providers: [
         { provide: ArticleService, useValue: articleServiceSpy },
-        { provide: ActivatedRoute, useValue: activatedRouteSpy }
+        { provide: ActivatedRoute, useValue: activatedRouteSpy },
+        { provide: CloudinaryService, useValue: cloudinaryServiceSpy }
       ]
     }).compileComponents();
 
     articleService = TestBed.inject(ArticleService) as jasmine.SpyObj<ArticleService>;
+    cloudinaryService = TestBed.inject(CloudinaryService) as jasmine.SpyObj<CloudinaryService>;
     fixture = TestBed.createComponent(ArticleEditComponent);
     component = fixture.componentInstance;
   });
@@ -65,8 +72,8 @@ describe('ArticleEditComponent', () => {
 
     component.onFileSelected(event);
 
-    expect(component.selectedFile).toBe(file);
-    expect(component.previewUrl).toBeTruthy();
+    expect(cloudinaryService.uploadImage).toHaveBeenCalledWith(file);
+    expect(component.uploadedImageUrl).toBe('https://cloudinary.com/example.jpg');
   });
 
   it('should reject non-image files', () => {
@@ -98,7 +105,10 @@ describe('ArticleEditComponent', () => {
 
     component.onSubmit();
 
-    expect(articleService.updateArticle).toHaveBeenCalledWith('1', jasmine.any(FormData));
+    expect(articleService.updateArticle).toHaveBeenCalledWith('1', jasmine.objectContaining({
+      title: 'Updated Title',
+      body: 'Updated content here for the article'
+    }));
   });
 
   it('should handle article not found', () => {

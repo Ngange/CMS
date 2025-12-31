@@ -20,11 +20,11 @@ export class ArticleService {
     return this.http.get<Article>(`${this.apiUrl}/${id}`);
   }
 
-  createArticle(articleData: FormData): Observable<Article> {
+  createArticle(articleData: any): Observable<Article> {
     return this.http.post<Article>(this.apiUrl, articleData);
   }
 
-  updateArticle(id: string, articleData: FormData): Observable<Article> {
+  updateArticle(id: string, articleData: any): Observable<Article> {
     return this.http.put<Article>(`${this.apiUrl}/${id}`, articleData);
   }
 

@@ -154,9 +154,9 @@ const updateUser = async (req, res) => {
       }
     });
 
-    // Handle file upload
-    if (req.file) {
-      filteredUpdates.profilePhoto = req.file.path;
+    // Normalize profile photo (Cloudinary URL or clear when null)
+    if (filteredUpdates.profilePhoto !== undefined) {
+      filteredUpdates.profilePhoto = filteredUpdates.profilePhoto || null;
     }
 
     // Validate role if being updated

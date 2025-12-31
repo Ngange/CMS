@@ -131,7 +131,7 @@ export class AuthService {
     return this.http.get<User>(`${this.apiUrl}/profile`);
   }
 
-  updateProfile(profileData: FormData): Observable<User> {
+  updateProfile(profileData: any): Observable<User> {
     return this.http.put<User>(`${this.apiUrl}/profile`, profileData).pipe(
       map(user => {
         localStorage.setItem('user', JSON.stringify(user));

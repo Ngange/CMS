@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ArticleService } from '../../../core/services/article.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 
 @Component({
   selector: 'app-article-create',
@@ -12,8 +13,9 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ArticleCreateComponent {
   articleForm: FormGroup;
   isLoading = false;
-  selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
+  uploadedImageUrl: string | null = null;
+  isUploadingImage = false;
   successMessage = '';
   errorMessage = '';
   canPublish = false;
@@ -22,7 +24,8 @@ export class ArticleCreateComponent {
     private fb: FormBuilder,
     private articleService: ArticleService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cloudinaryService: CloudinaryService
   ) {
     this.articleForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
@@ -41,37 +44,41 @@ export class ArticleCreateComponent {
         return;
       }
 
-      this.selectedFile = file;
       this.errorMessage = '';
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.previewUrl = reader.result;
-      };
-      reader.readAsDataURL(file);
+      this.isUploadingImage = true;
+      this.cloudinaryService.uploadImage(file).subscribe({
+        next: (url) => {
+          this.uploadedImageUrl = url;
+          this.previewUrl = url;
+          this.isUploadingImage = false;
+        },
+        error: (error) => {
+          console.error('Failed to upload image:', error);
+          this.errorMessage = 'Failed to upload image';
+          this.isUploadingImage = false;
+        },
+      });
     }
   }
 
   removeImage(): void {
-    this.selectedFile = null;
     this.previewUrl = null;
+    this.uploadedImageUrl = null;
   }
 
   onSubmit(): void {
-    if (this.articleForm.valid) {
+    if (this.articleForm.valid && !this.isUploadingImage) {
       this.isLoading = true;
       this.errorMessage = '';
       this.successMessage = '';
 
-      const formData = new FormData();
-      formData.append('title', this.articleForm.get('title')?.value);
-      formData.append('body', this.articleForm.get('body')?.value);
+      const payload = {
+        title: this.articleForm.get('title')?.value,
+        body: this.articleForm.get('body')?.value,
+        image: this.uploadedImageUrl,
+      };
 
-      if (this.selectedFile) {
-        formData.append('image', this.selectedFile);
-      }
-
-      this.articleService.createArticle(formData).subscribe({
+      this.articleService.createArticle(payload).subscribe({
         next: (article) => {
           const shouldPublish = this.canPublish && this.articleForm.get('publishState')?.value === 'published';
           const articleId = article?._id;
@@ -116,10 +123,6 @@ export class ArticleCreateComponent {
     } else {
       this.router.navigate(['/articles']);
     }
-  }
-
-  get selectedFileName(): string {
-    return this.selectedFile?.name || '';
   }
 
   get titleCharCount(): number {

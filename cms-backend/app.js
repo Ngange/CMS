@@ -24,6 +24,7 @@ app.use(
           'https://*.unsplash.com',
           'https://picsum.photos',
           'https://i.picsum.photos',
+          'https://res.cloudinary.com',
         ],
         styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
         scriptSrc: ["'self'"],
@@ -31,6 +32,8 @@ app.use(
           "'self'",
           'https://images.unsplash.com',
           'https://picsum.photos',
+          'https://api.cloudinary.com',
+          'https://res.cloudinary.com',
         ],
       },
     },
@@ -41,6 +44,7 @@ app.use(
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:4200',
+  'http://localhost:3000',
   'https://cms-role-base-access.netlify.app',
 ];
 
@@ -70,9 +74,6 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/auth', authRoutes);

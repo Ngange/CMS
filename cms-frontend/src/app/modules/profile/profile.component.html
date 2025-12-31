@@ -124,7 +124,7 @@
               mat-raised-button
               color="primary"
               (click)="onUpdateProfile()"
-              [disabled]="!profileForm.valid || isLoading"
+              [disabled]="!profileForm.valid || isLoading || isUploadingImage"
             >
               <mat-icon *ngIf="!isLoading">save</mat-icon>
               <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>

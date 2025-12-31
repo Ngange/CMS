@@ -2,12 +2,12 @@ const Article = require('../models/article.model');
 
 const createArticle = async (req, res) => {
   try {
-    const { title, body } = req.body;
+    const { title, body, image } = req.body;
     const article = new Article({
       title,
       body,
       author: req.user._id,
-      image: req.file ? req.file.path : null,
+      image: image || null, // expect Cloudinary URL from client
     });
     await article.save();
     res.status(201).json(article);
@@ -59,11 +59,11 @@ const getArticle = async (req, res) => {
 
 const updateArticle = async (req, res) => {
   try {
-    const { title, body } = req.body;
+    const { title, body, image } = req.body;
     const updateData = { title, body };
 
-    if (req.file) {
-      updateData.image = req.file.path;
+    if (image !== undefined) {
+      updateData.image = image || null; // Cloudinary URL or clear when null/empty
     }
 
     const article = await Article.findByIdAndUpdate(req.params.id, updateData, {

@@ -112,9 +112,9 @@
               <mat-icon>delete</mat-icon>
               Remove
             </button>
-            <span *ngIf="selectedFile" class="file-name">
+            <span *ngIf="uploadedImageUrl" class="file-name">
               <mat-icon>check_circle</mat-icon>
-              {{ selectedFileName }}
+              Image uploaded
             </span>
           </div>
         </div>
@@ -144,7 +144,7 @@
             type="submit"
             mat-raised-button
             color="primary"
-            [disabled]="!articleForm.valid || isLoading"
+            [disabled]="!articleForm.valid || isLoading || isUploadingImage"
           >
             <mat-icon *ngIf="!isLoading">save</mat-icon>
             <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>

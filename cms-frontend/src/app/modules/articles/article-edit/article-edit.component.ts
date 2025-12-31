@@ -5,6 +5,7 @@ import { ArticleService } from '../../../core/services/article.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Article } from '../../../core/models/article.model';
 import { getImageUrl } from '../../../shared/utils/image-url.util';
+import { CloudinaryService } from '../../../core/services/cloudinary.service';
 
 @Component({
   selector: 'app-article-edit',
@@ -20,8 +21,10 @@ export class ArticleEditComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   isLoaded = false;
-  selectedFile: File | null = null;
   imagePreview: string | null = null;
+  uploadedImageUrl: string | null = null;
+  isUploadingImage = false;
+  imageRemoved = false;
   canPublish = false;
   previousStatus: 'draft' | 'published' = 'draft';
 
@@ -30,7 +33,8 @@ export class ArticleEditComponent implements OnInit {
     private articleService: ArticleService,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cloudinaryService: CloudinaryService
   ) {}
 
   ngOnInit(): void {
@@ -58,11 +62,12 @@ export class ArticleEditComponent implements OnInit {
         });
 
         this.imagePreview = article.image ? getImageUrl(article.image) : null;
+        this.uploadedImageUrl = article.image || null;
         this.isLoading = false;
         this.isLoaded = true;
       },
       error: (error) => {
-        this.errorMessage = 'Failed to load article';
+        this.errorMessage = error?.error?.message || 'Failed to load article';
         this.isLoading = false;
       }
     });
@@ -71,23 +76,37 @@ export class ArticleEditComponent implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
-      this.selectedFile = input.files[0];
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        this.errorMessage = 'Please select a valid image file';
+        return;
+      }
 
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.imagePreview = e.target.result;
-      };
-      reader.readAsDataURL(this.selectedFile);
+      this.isUploadingImage = true;
+      this.imageRemoved = false;
+      this.cloudinaryService.uploadImage(file).subscribe({
+        next: (url) => {
+          this.uploadedImageUrl = url;
+          this.imagePreview = url;
+          this.isUploadingImage = false;
+        },
+        error: (error) => {
+          console.error('Failed to upload image:', error);
+          this.errorMessage = 'Failed to upload image';
+          this.isUploadingImage = false;
+        },
+      });
     }
   }
 
   removeImage(): void {
-    this.selectedFile = null;
     this.imagePreview = null;
+    this.uploadedImageUrl = null;
+    this.imageRemoved = true;
   }
 
   onSubmit(): void {
-    if (this.articleForm.invalid || this.isSubmitting) {
+    if (this.articleForm.invalid || this.isSubmitting || this.isUploadingImage) {
       return;
     }
 
@@ -95,21 +114,18 @@ export class ArticleEditComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const formData = new FormData();
-    formData.append('title', this.articleForm.value.title.trim());
-    formData.append('body', this.articleForm.value.body.trim());
-
     const desiredStatus: 'draft' | 'published' = this.canPublish
       ? this.articleForm.value.status
       : this.previousStatus;
 
-    formData.append('status', desiredStatus);
+    const payload = {
+      title: this.articleForm.value.title.trim(),
+      body: this.articleForm.value.body.trim(),
+      status: desiredStatus,
+      image: this.imageRemoved ? null : this.uploadedImageUrl,
+    };
 
-    if (this.selectedFile) {
-      formData.append('image', this.selectedFile);
-    }
-
-    this.articleService.updateArticle(this.articleId, formData).subscribe({
+    this.articleService.updateArticle(this.articleId, payload).subscribe({
       next: (article) => {
         if (this.canPublish) {
           const articleId = article?._id || this.articleId;
@@ -155,10 +171,6 @@ export class ArticleEditComponent implements OnInit {
 
   get previewUrl(): string | null {
     return this.imagePreview;
-  }
-
-  get selectedFileName(): string {
-    return this.selectedFile?.name || '';
   }
 
   private handleSuccess(message: string): void {

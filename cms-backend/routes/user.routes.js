@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth.middleware');
 const { checkPermission } = require('../middleware/authorization.middleware');
-const upload = require('../middleware/upload.middleware');
 const {
   getAllUsers,
   getUserById,
@@ -25,7 +24,7 @@ router.post('/', checkPermission('user', 'create'), createUser);
 router.get('/:id', getUserById);
 
 // Update user profile (own profile or SuperAdmin)
-router.put('/:id', upload.single('profilePhoto'), updateUser);
+router.put('/:id', updateUser);
 
 // Toggle user status (activate/deactivate - SuperAdmin only)
 router.patch(

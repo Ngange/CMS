@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { User } from '../../../../core/models/user.model';
 import { Role } from '../../../../core/models/role.model';
 import { ArticleService } from '../../../../core/services/article.service';
+import { CloudinaryService } from '../../../../core/services/cloudinary.service';
 
 @Component({
   selector: 'app-user-edit-dialog',
@@ -15,7 +16,8 @@ export class UserEditDialogComponent {
   passwordForm: FormGroup;
   roles: Role[] = [];
   profilePhotoPreview: string | null = null;
-  selectedFile: File | null = null;
+  uploadedImageUrl: string | null = null;
+  isUploadingImage = false;
   showPasswordReset = false;
   hidePassword = true;
   hideConfirmPassword = true;
@@ -23,6 +25,7 @@ export class UserEditDialogComponent {
   constructor(
     private fb: FormBuilder,
     private articleService: ArticleService,
+    private cloudinaryService: CloudinaryService,
     public dialogRef: MatDialogRef<UserEditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { user: User; roles: Role[] }
   ) {
@@ -31,6 +34,7 @@ export class UserEditDialogComponent {
     this.profilePhotoPreview = data.user.profilePhoto
       ? this.articleService.getImageUrl(data.user.profilePhoto)
       : null;
+    this.uploadedImageUrl = data.user.profilePhoto || null;
     this.editForm = this.fb.group({
       fullName: [data.user.fullName, [Validators.required, Validators.minLength(3)]],
       email: [data.user.email, [Validators.required, Validators.email]],
@@ -52,12 +56,23 @@ export class UserEditDialogComponent {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
-      this.selectedFile = input.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.profilePhotoPreview = reader.result as string;
-      };
-      reader.readAsDataURL(this.selectedFile);
+      const file = input.files[0];
+      if (!file.type.startsWith('image/')) {
+        return;
+      }
+
+      this.isUploadingImage = true;
+      this.cloudinaryService.uploadImage(file).subscribe({
+        next: (url) => {
+          this.uploadedImageUrl = url;
+          this.profilePhotoPreview = url;
+          this.isUploadingImage = false;
+        },
+        error: (error) => {
+          console.error('Failed to upload profile photo:', error);
+          this.isUploadingImage = false;
+        },
+      });
     }
   }
 
@@ -73,22 +88,20 @@ export class UserEditDialogComponent {
   }
 
   onSubmit(): void {
-    if (this.editForm.valid) {
-      const formData = new FormData();
-      formData.append('fullName', this.editForm.get('fullName')?.value);
-      formData.append('email', this.editForm.get('email')?.value);
-      formData.append('role', this.editForm.get('role')?.value);
-      formData.append('isActive', this.editForm.get('isActive')?.value);
-
-      if (this.selectedFile) {
-        formData.append('profilePhoto', this.selectedFile);
-      }
+    if (this.editForm.valid && !this.isUploadingImage) {
+      const payload: any = {
+        fullName: this.editForm.get('fullName')?.value,
+        email: this.editForm.get('email')?.value,
+        role: this.editForm.get('role')?.value,
+        isActive: this.editForm.get('isActive')?.value,
+        profilePhoto: this.uploadedImageUrl,
+      };
 
       if (this.showPasswordReset && this.passwordForm.valid) {
-        formData.append('password', this.passwordForm.get('password')?.value);
+        payload.password = this.passwordForm.get('password')?.value;
       }
 
-      this.dialogRef.close(formData);
+      this.dialogRef.close(payload);
     }
   }
 }
