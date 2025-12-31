@@ -101,17 +101,7 @@
       <ng-container matColumnDef="role">
         <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
         <mat-cell *matCellDef="let user">
-          <mat-form-field appearance="fill" class="role-select">
-            <mat-select
-              [value]="user.role._id"
-              (selectionChange)="updateUserRole(user, $event.value)"
-              aria-label="Change user role"
-            >
-              <mat-option *ngFor="let role of roles" [value]="role._id">
-                {{ role.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <span class="role-badge">{{ user.role.name }}</span>
         </mat-cell>
       </ng-container>
 
@@ -119,18 +109,6 @@
       <ng-container matColumnDef="status">
         <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
         <mat-cell *matCellDef="let user">
-          <button
-            mat-icon-button
-            [matTooltip]="
-              user.isActive ? 'Click to deactivate' : 'Click to activate'
-            "
-            (click)="toggleUserStatus(user)"
-            class="status-toggle"
-          >
-            <mat-icon [color]="getStatusColor(user.isActive)">
-              {{ getStatusIcon(user.isActive) }}
-            </mat-icon>
-          </button>
           <span
             class="status-text"
             [ngClass]="user.isActive ? 'active' : 'inactive'"
@@ -189,41 +167,17 @@
         <div class="card-body">
           <div class="card-row">
             <span class="card-label">Role:</span>
-            <mat-form-field appearance="fill" class="card-role-select">
-              <mat-select
-                [value]="user.role._id"
-                (selectionChange)="updateUserRole(user, $event.value)"
-                aria-label="Change user role"
-              >
-                <mat-option *ngFor="let role of roles" [value]="role._id">
-                  {{ role.name }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+            <span class="card-role-badge">{{ user.role.name }}</span>
           </div>
 
           <div class="card-row">
             <span class="card-label">Status:</span>
-            <div class="card-status">
-              <button
-                mat-icon-button
-                [matTooltip]="
-                  user.isActive ? 'Click to deactivate' : 'Click to activate'
-                "
-                (click)="toggleUserStatus(user)"
-                class="card-status-toggle"
-              >
-                <mat-icon [color]="getStatusColor(user.isActive)">
-                  {{ getStatusIcon(user.isActive) }}
-                </mat-icon>
-              </button>
-              <span
-                class="status-text"
-                [ngClass]="user.isActive ? 'active' : 'inactive'"
-              >
-                {{ user.isActive ? "Active" : "Inactive" }}
-              </span>
-            </div>
+            <span
+              class="status-text"
+              [ngClass]="user.isActive ? 'active' : 'inactive'"
+            >
+              {{ user.isActive ? "Active" : "Inactive" }}
+            </span>
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ArticleService } from '../../../core/services/article.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-article-create',
@@ -15,16 +16,20 @@ export class ArticleCreateComponent {
   previewUrl: string | ArrayBuffer | null = null;
   successMessage = '';
   errorMessage = '';
+  canPublish = false;
 
   constructor(
     private fb: FormBuilder,
     private articleService: ArticleService,
+    private authService: AuthService,
     private router: Router
   ) {
     this.articleForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
-      body: ['', [Validators.required, Validators.minLength(50)]]
+      body: ['', [Validators.required, Validators.minLength(50)]],
+      publishState: ['draft']
     });
+    this.canPublish = this.authService.hasPermission('article', 'publish');
   }
 
   onFileSelected(event: any): void {
@@ -67,19 +72,40 @@ export class ArticleCreateComponent {
       }
 
       this.articleService.createArticle(formData).subscribe({
-        next: () => {
-          this.successMessage = 'Article created successfully';
-          setTimeout(() => {
-            this.router.navigate(['/articles']);
-          }, 1500);
+        next: (article) => {
+          const shouldPublish = this.canPublish && this.articleForm.get('publishState')?.value === 'published';
+          const articleId = article?._id;
+
+          if (shouldPublish && articleId) {
+            this.articleService.publishArticle(articleId).subscribe({
+              next: () => this.handleSuccess('Article published successfully'),
+              error: (error) => this.handleError(error)
+            });
+          } else {
+            this.handleSuccess('Article created successfully');
+          }
         },
-        error: (error) => {
-          console.error('Failed to create article:', error);
-          this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Failed to create article';
-        }
+        error: (error) => this.handleError(error)
       });
     }
+  }
+
+  get isPublishSelected(): boolean {
+    return this.canPublish && this.articleForm.get('publishState')?.value === 'published';
+  }
+
+  private handleSuccess(message: string): void {
+    this.successMessage = message;
+    this.isLoading = false;
+    setTimeout(() => {
+      this.router.navigate(['/articles']);
+    }, 1500);
+  }
+
+  private handleError(error: any): void {
+    console.error('Failed to create/publish article:', error);
+    this.isLoading = false;
+    this.errorMessage = error?.error?.message || 'Failed to create article';
   }
 
   onCancel(): void {

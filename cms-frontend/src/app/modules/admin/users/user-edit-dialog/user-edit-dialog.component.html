@@ -59,6 +59,17 @@
       </mat-error>
     </mat-form-field>
 
+    <div class="status-toggle-section">
+      <mat-label class="status-label">User Status</mat-label>
+      <mat-slide-toggle
+        formControlName="isActive"
+        class="status-toggle"
+        color="accent"
+      >
+        {{ editForm.get('isActive')?.value ? "Active" : "Inactive" }}
+      </mat-slide-toggle>
+    </div>
+
     <!-- Password Reset Section -->
     <mat-divider class="divider"></mat-divider>
 

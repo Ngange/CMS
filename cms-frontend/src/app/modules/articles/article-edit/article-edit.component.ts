@@ -22,6 +22,8 @@ export class ArticleEditComponent implements OnInit {
   isLoaded = false;
   selectedFile: File | null = null;
   imagePreview: string | null = null;
+  canPublish = false;
+  previousStatus: 'draft' | 'published' = 'draft';
 
   constructor(
     private fb: FormBuilder,
@@ -33,10 +35,11 @@ export class ArticleEditComponent implements OnInit {
 
   ngOnInit(): void {
     this.articleId = this.route.snapshot.params['id'];
+    this.canPublish = this.authService.hasPermission('article', 'publish');
 
     this.articleForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      body: ['', [Validators.required, Validators.minLength(10)]],
+      title: ['', [Validators.required, Validators.minLength(5)]],
+      body: ['', [Validators.required, Validators.minLength(50)]],
       status: ['draft', Validators.required]
     });
 
@@ -47,6 +50,7 @@ export class ArticleEditComponent implements OnInit {
     this.articleService.getArticleById(this.articleId).subscribe({
       next: (article) => {
         this.article = article;
+        this.previousStatus = article.status;
         this.articleForm.patchValue({
           title: article.title,
           body: article.body,
@@ -94,7 +98,12 @@ export class ArticleEditComponent implements OnInit {
     const formData = new FormData();
     formData.append('title', this.articleForm.value.title.trim());
     formData.append('body', this.articleForm.value.body.trim());
-    formData.append('status', this.articleForm.value.status);
+
+    const desiredStatus: 'draft' | 'published' = this.canPublish
+      ? this.articleForm.value.status
+      : this.previousStatus;
+
+    formData.append('status', desiredStatus);
 
     if (this.selectedFile) {
       formData.append('image', this.selectedFile);
@@ -102,15 +111,25 @@ export class ArticleEditComponent implements OnInit {
 
     this.articleService.updateArticle(this.articleId, formData).subscribe({
       next: (article) => {
-        this.successMessage = 'Article updated successfully';
-        this.isLoading = false;
-        this.router.navigate(['/articles']);
+        if (this.canPublish) {
+          const articleId = article?._id || this.articleId;
+
+          if (desiredStatus === 'published') {
+            this.articleService.publishArticle(articleId).subscribe({
+              next: () => this.handleSuccess('Article published successfully'),
+              error: (error) => this.handleError(error)
+            });
+          } else {
+            this.articleService.unpublishArticle(articleId).subscribe({
+              next: () => this.handleSuccess('Article saved as draft'),
+              error: (error) => this.handleError(error)
+            });
+          }
+        } else {
+          this.handleSuccess('Article updated successfully');
+        }
       },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to update article';
-        this.isSubmitting = false;
-        this.isLoading = false;
-      }
+      error: (error) => this.handleError(error)
     });
   }
 
@@ -121,6 +140,10 @@ export class ArticleEditComponent implements OnInit {
   get title() { return this.articleForm.get('title'); }
   get body() { return this.articleForm.get('body'); }
   get status() { return this.articleForm.get('status'); }
+
+  get isPublishSelected(): boolean {
+    return this.canPublish && this.articleForm.get('status')?.value === 'published';
+  }
 
   get titleCharCount(): number {
     return this.articleForm?.get('title')?.value?.length || 0;
@@ -136,5 +159,21 @@ export class ArticleEditComponent implements OnInit {
 
   get selectedFileName(): string {
     return this.selectedFile?.name || '';
+  }
+
+  private handleSuccess(message: string): void {
+    this.successMessage = message;
+    this.isSubmitting = false;
+    this.isLoading = false;
+    setTimeout(() => {
+      this.router.navigate(['/articles']);
+    }, 1000);
+  }
+
+  private handleError(error: any): void {
+    console.error('Failed to update article:', error);
+    this.errorMessage = error?.error?.message || 'Failed to update article';
+    this.isSubmitting = false;
+    this.isLoading = false;
   }
 }

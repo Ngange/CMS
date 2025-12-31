@@ -118,6 +118,21 @@
             </span>
           </div>
         </div>
+
+        <!-- Publish Options (only for users with publish permission) -->
+        <div *ngIf="canPublish" class="publish-options">
+          <h3>Publish Options</h3>
+          <p class="help-text">Choose whether to publish immediately or save as draft.</p>
+          <mat-button-toggle-group
+            formControlName="publishState"
+            name="publishState"
+            aria-label="Publish options"
+            class="publish-toggle-group"
+          >
+            <mat-button-toggle value="draft">Save as Draft</mat-button-toggle>
+            <mat-button-toggle value="published">Publish Now</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
       </mat-card-content>
 
       <!-- Actions -->
@@ -131,7 +146,11 @@
           >
             <mat-icon *ngIf="!isLoading">save</mat-icon>
             <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-            {{ isLoading ? "Creating..." : "Create Article" }}
+            {{
+              isLoading
+                ? (isPublishSelected ? 'Publishing...' : 'Creating...')
+                : (isPublishSelected ? 'Publish Article' : 'Create Draft')
+            }}
           </button>
           <button
             type="button"

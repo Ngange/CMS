@@ -23,6 +23,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -95,6 +96,7 @@ import { ArticleViewComponent } from './modules/articles/article-view/article-vi
 		MatButtonToggleModule,
 		MatSnackBarModule,
 		MatDividerModule,
+		MatSlideToggleModule,
 		AppRoutingModule
 	],
 	providers: [

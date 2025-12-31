@@ -8,7 +8,7 @@
   margin-bottom: var(--space-8);
 
   .header-content {
-    h1 {
+    :is(h1) {
       color: var(--text-primary);
       font-size: var(--text-3xl);
       font-weight: var(--font-bold);
@@ -30,7 +30,7 @@
   background-color: var(--surface);
   border: 1px solid var(--border-light);
 
-  mat-card-content {
+  :is(mat-card-content) {
     padding: var(--space-6);
 
     .filters-row {
@@ -51,7 +51,7 @@
         min-width: 150px;
         text-align: right;
 
-        span {
+        :is(span) {
           display: block;
           font-weight: var(--font-semibold);
           color: var(--text-primary);
@@ -69,7 +69,7 @@
   min-height: 400px;
   color: var(--text-secondary);
 
-  p {
+  :is(p) {
     margin-top: var(--space-4);
     font-size: var(--text-base);
   }
@@ -82,7 +82,7 @@
   border-radius: var(--radius-lg);
   border: 2px dashed var(--border-medium);
 
-  mat-icon {
+  :is(mat-icon) {
     font-size: 80px;
     width: 80px;
     height: 80px;
@@ -91,14 +91,14 @@
     margin: 0 auto var(--space-4);
   }
 
-  h2 {
+  :is(h2) {
     color: var(--text-primary);
     font-size: var(--text-2xl);
     font-weight: var(--font-semibold);
     margin: 0 0 var(--space-2) 0;
   }
 
-  p {
+  :is(p) {
     color: var(--text-secondary);
     font-size: var(--text-base);
     margin: 0;
@@ -117,7 +117,7 @@
 .users-table {
   width: 100%;
 
-  mat-header-cell {
+  :is(mat-header-cell) {
     background-color: var(--surface-secondary);
     color: var(--text-primary);
     font-weight: var(--font-semibold);
@@ -125,12 +125,12 @@
     padding: var(--space-4);
   }
 
-  mat-cell {
+  :is(mat-cell) {
     padding: var(--space-4);
     border-bottom: 1px solid var(--border-light);
   }
 
-  mat-row {
+  :is(mat-row) {
     transition: all var(--duration-fast) var(--ease-smooth);
 
     &:hover {
@@ -156,19 +156,14 @@
   }
 }
 
-.role-select {
-  width: 100%;
-  max-width: 150px;
-}
-
-.status-toggle {
-  transition: all var(--duration-fast) var(--ease-smooth);
-  padding: 0;
-  margin-right: var(--space-2);
-
-  &:hover {
-    background-color: var(--surface-secondary);
-  }
+.role-badge {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+  display: inline-block;
 }
 
 .status-text {
@@ -193,7 +188,7 @@
   display: flex;
   gap: var(--space-2);
 
-  button {
+  :is(button) {
     transition: all var(--duration-fast) var(--ease-smooth);
 
     &:hover {
@@ -212,8 +207,8 @@
   }
 
   .users-table {
-    mat-cell,
-    mat-header-cell {
+    :is(mat-cell),
+    :is(mat-header-cell) {
       padding: var(--space-3);
       font-size: var(--text-sm);
     }
@@ -388,7 +383,7 @@
     transform: translateY(-2px);
   }
 
-  mat-card-content {
+  :is(mat-card-content) {
     padding: var(--space-4);
     display: flex;
     flex-direction: column;
@@ -464,6 +459,16 @@
   max-width: 150px;
 }
 
+.card-role-badge {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+  display: inline-block;
+}
+
 .card-status {
   display: flex;
   align-items: center;
@@ -518,7 +523,7 @@
   }
 
   .user-card {
-    mat-card-content {
+    :is(mat-card-content) {
       padding: var(--space-3);
       gap: var(--space-3);
     }

@@ -34,7 +34,8 @@ export class UserEditDialogComponent {
     this.editForm = this.fb.group({
       fullName: [data.user.fullName, [Validators.required, Validators.minLength(3)]],
       email: [data.user.email, [Validators.required, Validators.email]],
-      role: [data.user.role._id, Validators.required]
+      role: [data.user.role._id, Validators.required],
+      isActive: [data.user.isActive]
     });
     this.passwordForm = this.fb.group({
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -77,6 +78,7 @@ export class UserEditDialogComponent {
       formData.append('fullName', this.editForm.get('fullName')?.value);
       formData.append('email', this.editForm.get('email')?.value);
       formData.append('role', this.editForm.get('role')?.value);
+      formData.append('isActive', this.editForm.get('isActive')?.value);
 
       if (this.selectedFile) {
         formData.append('profilePhoto', this.selectedFile);

@@ -84,3 +84,24 @@ button {
 .password-form mat-form-field {
   margin-bottom: 12px;
 }
+
+.status-toggle-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.status-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.status-toggle {
+  margin: 0;
+}
