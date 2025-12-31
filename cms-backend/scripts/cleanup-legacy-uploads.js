@@ -11,13 +11,14 @@ const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cms_db';
     await mongoose.connect(mongoUri);
     console.log('Connected.');
 
+    // Match uploads/ with forward slash or backslash, or uploads\ patterns
     const articleResult = await Article.updateMany(
-      { image: { $regex: '^uploads/' } },
+      { image: { $regex: 'uploads[/\\\\]' } },
       { $set: { image: null } }
     );
 
     const userResult = await User.updateMany(
-      { profilePhoto: { $regex: '^uploads/' } },
+      { profilePhoto: { $regex: 'uploads[/\\\\]' } },
       { $set: { profilePhoto: null } }
     );
 
