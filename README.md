@@ -108,10 +108,10 @@ npm run seed
 Creates default roles and test users.
 
 👥 **Test Users**
-- SuperAdmin — Email: superadmin@cms.com — Password: Admin@123 — Full access
-- Manager — Email: manager@cms.com — Password: Manager@123 — Manage/publish articles, view users
-- Contributor — Email: contributor@cms.com — Password: Contributor@123 — Create/edit own articles, view published
-- Viewer — Email: viewer@cms.com — Password: Viewer@123 — View published only
+- SuperAdmin — Email: <superadmin-email> — Password: <superadmin-password> — Full access
+- Manager — Email: <manager-email> — Password: <manager-password> — Manage/publish articles, view users
+- Contributor — Email: <contributor-email> — Password: <contributor-password> — Create/edit own articles, view published
+- Viewer — Email: <viewer-email> — Password: <viewer-password> — View published only
 
 🔌 **API Documentation**
 Base URL: `http://localhost:3000/api`
