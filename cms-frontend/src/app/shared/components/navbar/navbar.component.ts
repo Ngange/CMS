@@ -25,7 +25,6 @@ export class NavbarComponent {
     map(user => this.buildNavItems(user))
   );
   isMenuOpen = false;
-  isDropdownOpen = false;
 
   constructor(
     private authService: AuthService,
@@ -38,31 +37,19 @@ export class NavbarComponent {
     this.isMenuOpen = !this.isMenuOpen;
   }
 
-  toggleDropdown(): void {
-    this.isDropdownOpen = !this.isDropdownOpen;
-  }
-
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
 
-    // Close all menus when clicking outside the navbar
+    // Close menu when clicking outside the navbar
     if (!this.elementRef.nativeElement.contains(target)) {
       this.isMenuOpen = false;
-      this.isDropdownOpen = false;
       return;
-    }
-
-    // Close dropdown when clicking elsewhere inside the navbar
-    const dropdown = target.closest('.user-dropdown');
-    if (!dropdown && this.isDropdownOpen) {
-      this.isDropdownOpen = false;
     }
   }
 
   onLinkClick(): void {
     this.isMenuOpen = false;
-    this.isDropdownOpen = false;
   }
 
   getImageUrl(imagePath: string | undefined): string | null {

@@ -11,58 +11,81 @@
     </button>
 
     <div class="navbar-menu" [class.active]="isMenuOpen">
-      <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
-        <li
-          class="nav-item"
-          *ngFor="let item of navItems; trackBy: trackByRoute"
-        >
-          <a
-            class="nav-link"
-            [routerLink]="item.route"
-            routerLinkActive="active"
-            (click)="onLinkClick()"
+      <ng-container *ngIf="currentUser$ | async as currentUser; else guestMenu">
+        <div class="menu-user">
+          <img
+            *ngIf="currentUser.profilePhoto"
+            [src]="getImageUrl(currentUser.profilePhoto)"
+            alt="Profile"
+            class="user-avatar"
+          />
+          <mat-icon *ngIf="!currentUser.profilePhoto" class="user-placeholder"
+            >account_circle</mat-icon
           >
-            <mat-icon>{{ item.icon }}</mat-icon>
-            {{ item.label }}
-          </a>
-        </li>
-      </ul>
-
-      <div class="navbar-user" *ngIf="currentUser$ | async as currentUser">
-        <div class="user-dropdown">
-          <button class="user-button" (click)="toggleDropdown()">
-            <img
-              *ngIf="currentUser.profilePhoto"
-              [src]="getImageUrl(currentUser.profilePhoto)"
-              alt="Profile"
-              class="user-avatar"
-            />
-            <mat-icon *ngIf="!currentUser.profilePhoto"
-              >account_circle</mat-icon
-            >
-            <span>{{ currentUser.fullName }}</span>
-            <mat-icon>arrow_drop_down</mat-icon>
-          </button>
-          <div class="dropdown-menu" [class.show]="isDropdownOpen">
-            <a
-              routerLink="/profile"
-              class="dropdown-item"
-              (click)="onLinkClick()"
-            >
-              <mat-icon>person</mat-icon> Profile
-            </a>
-            <div class="dropdown-divider"></div>
-            <button (click)="logout()" class="dropdown-item">
-              <mat-icon>logout</mat-icon> Logout
-            </button>
+          <div class="user-meta">
+            <span class="user-name">{{ currentUser.fullName }}</span>
+            <span class="user-email">{{ currentUser.email }}</span>
           </div>
         </div>
-      </div>
 
-      <div class="navbar-auth" *ngIf="!(currentUser$ | async)">
-        <a routerLink="/login" class="btn btn-outline">Login</a>
-        <a routerLink="/register" class="btn btn-primary">Register</a>
-      </div>
+        <a routerLink="/profile" class="menu-link" (click)="onLinkClick()">
+          <mat-icon>person</mat-icon>
+          Profile
+        </a>
+
+        <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
+          <li
+            class="nav-item"
+            *ngFor="let item of navItems; trackBy: trackByRoute"
+          >
+            <a
+              class="nav-link"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              (click)="onLinkClick()"
+            >
+              <mat-icon>{{ item.icon }}</mat-icon>
+              {{ item.label }}
+            </a>
+          </li>
+        </ul>
+
+        <button (click)="logout()" class="menu-link logout">
+          <mat-icon>logout</mat-icon>
+          Logout
+        </button>
+      </ng-container>
+
+      <ng-template #guestMenu>
+        <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
+          <li
+            class="nav-item"
+            *ngFor="let item of navItems; trackBy: trackByRoute"
+          >
+            <a
+              class="nav-link"
+              [routerLink]="item.route"
+              routerLinkActive="active"
+              (click)="onLinkClick()"
+            >
+              <mat-icon>{{ item.icon }}</mat-icon>
+              {{ item.label }}
+            </a>
+          </li>
+        </ul>
+
+        <div class="navbar-auth">
+          <a routerLink="/login" class="btn btn-outline" (click)="onLinkClick()"
+            >Login</a
+          >
+          <a
+            routerLink="/register"
+            class="btn btn-primary"
+            (click)="onLinkClick()"
+            >Register</a
+          >
+        </div>
+      </ng-template>
     </div>
   </div>
 </nav>

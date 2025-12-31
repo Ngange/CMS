@@ -252,3 +252,325 @@
     }
   }
 }
+
+@media (max-width: 480px) {
+  .users-container {
+    padding: var(--space-3);
+  }
+
+  .users-header {
+    margin-bottom: var(--space-4);
+  }
+
+  .users-header .header-content h1 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+  }
+
+  .users-header .header-content .subtitle {
+    font-size: var(--text-sm);
+  }
+
+  .filters-card {
+    margin-bottom: var(--space-4);
+  }
+
+  .filters-card mat-card-content {
+    padding: var(--space-3) !important;
+  }
+
+  .filters-card .filters-row {
+    gap: var(--space-2);
+  }
+
+  .filters-card .filter-field {
+    font-size: var(--text-xs);
+  }
+
+  .filters-card .result-count {
+    padding: var(--space-2) 0 0 0;
+    font-size: var(--text-xs);
+    min-width: auto;
+    width: 100%;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .users-table {
+    min-width: 500px;
+  }
+
+  .users-table mat-header-cell,
+  .users-table mat-cell {
+    padding: var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .name-cell {
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+
+  .role-select {
+    max-width: 120px;
+    font-size: var(--text-xs);
+  }
+
+  .status-toggle {
+    margin-right: var(--space-1);
+  }
+
+  .status-text {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .actions-cell {
+    gap: var(--space-1);
+    flex-wrap: wrap;
+  }
+
+  .actions-cell button {
+    padding: 0 var(--space-2);
+  }
+
+  .actions-cell mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .empty-state {
+    padding: var(--space-8);
+  }
+
+  .empty-state mat-icon {
+    font-size: 60px;
+    width: 60px;
+    height: 60px;
+    margin-bottom: var(--space-3);
+  }
+
+  .empty-state h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-1);
+  }
+
+  .empty-state p {
+    font-size: var(--text-sm);
+  }
+
+  .loading-container {
+    min-height: 300px;
+  }
+}
+
+.cards-container {
+  display: none;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.user-card {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: all var(--duration-base) var(--ease-smooth);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  mat-card-content {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    flex-grow: 1;
+  }
+}
+
+.card-header {
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: var(--space-3);
+}
+
+.card-user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.card-avatar {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.card-name-email {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card-name {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-email {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.card-label {
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  min-width: 70px;
+}
+
+.card-role-select {
+  flex: 1;
+  max-width: 150px;
+}
+
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.card-status-toggle {
+  padding: 0;
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+
+.action-edit,
+.action-delete {
+  flex: 1;
+  font-size: var(--text-sm);
+  height: auto;
+  padding: var(--space-2) var(--space-3);
+}
+
+.action-edit {
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+
+  &:hover {
+    background-color: var(--accent-secondary);
+  }
+}
+
+.action-delete {
+  background-color: var(--error);
+  color: var(--text-inverse);
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-container {
+    display: none;
+  }
+
+  .cards-container {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .user-card {
+    mat-card-content {
+      padding: var(--space-3);
+      gap: var(--space-3);
+    }
+  }
+
+  .card-user-info {
+    gap: var(--space-2);
+  }
+
+  .card-avatar {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .card-name {
+    font-size: var(--text-sm);
+  }
+
+  .card-email {
+    font-size: var(--text-xs);
+  }
+
+  .card-role-select {
+    max-width: 120px;
+    font-size: var(--text-xs);
+  }
+
+  .card-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+
+  .card-status {
+    width: 100%;
+  }
+
+  .card-actions {
+    gap: var(--space-1);
+  }
+
+  .action-edit,
+  .action-delete {
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .action-edit mat-icon,
+  .action-delete mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
