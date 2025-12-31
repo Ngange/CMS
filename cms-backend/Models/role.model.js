@@ -36,4 +36,5 @@ const roleSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('Role', roleSchema);
+// Reuse compiled model during hot-reload to avoid OverwriteModelError
+module.exports = mongoose.models.Role || mongoose.model('Role', roleSchema);

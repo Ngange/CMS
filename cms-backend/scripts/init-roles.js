@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Role = require('../Models/role.model');
+const Role = require('../models/role.model');
 require('dotenv').config();
 
 const initializeRoles = async () => {

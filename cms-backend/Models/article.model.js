@@ -39,4 +39,6 @@ const articleSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model('Article', articleSchema);
+// Reuse compiled model during hot-reload to avoid OverwriteModelError
+module.exports =
+  mongoose.models.Article || mongoose.model('Article', articleSchema);

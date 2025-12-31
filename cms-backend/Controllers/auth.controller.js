@@ -1,6 +1,6 @@
 const AuthService = require('../services/auth.service');
-const Role = require('../Models/role.model');
-const User = require('../Models/user.model');
+const Role = require('../models/role.model');
+const User = require('../models/user.model');
 
 const register = async (req, res) => {
   try {

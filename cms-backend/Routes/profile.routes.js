@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../Middleware/auth.middleware');
-const upload = require('../Middleware/upload.middleware');
+const { authenticateToken } = require('../middleware/auth.middleware');
+const upload = require('../middleware/upload.middleware');
 const {
   getMyProfile,
   updateMyProfile,
   changePassword,
-} = require('../Controllers/profile.controller');
+} = require('../controllers/profile.controller');
 
 // All profile routes require authentication
 router.use(authenticateToken);
