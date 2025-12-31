@@ -4,13 +4,18 @@
       <a routerLink="/">CMS</a>
     </div>
 
-    <button class="navbar-toggle" (click)="toggleMenu()">
+    <button 
+      class="navbar-toggle" 
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="isMenuOpen"
+      aria-label="Toggle navigation menu"
+      type="button">
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
 
-    <div class="navbar-menu" [class.active]="isMenuOpen">
+    <div class="navbar-menu" [class.active]="isMenuOpen" role="navigation">
       <ng-container *ngIf="currentUser$ | async as currentUser; else guestMenu">
         <div class="menu-user">
           <img
@@ -28,46 +33,46 @@
           </div>
         </div>
 
-        <a routerLink="/profile" class="menu-link" (click)="onLinkClick()">
+        <a routerLink="/profile" class="menu-link" (click)="onLinkClick()" role="menuitem">
           <mat-icon>person</mat-icon>
           Profile
         </a>
 
-        <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
+        <ul class="navbar-nav" role="menu" *ngIf="navItems$ | async as navItems">
           <li
             class="nav-item"
             *ngFor="let item of navItems; trackBy: trackByRoute"
-          >
+            role="none">
             <a
               class="nav-link"
               [routerLink]="item.route"
               routerLinkActive="active"
               (click)="onLinkClick()"
-            >
+              role="menuitem">
               <mat-icon>{{ item.icon }}</mat-icon>
               {{ item.label }}
             </a>
           </li>
         </ul>
 
-        <button (click)="logout()" class="menu-link logout">
+        <button (click)="logout()" class="menu-link logout" role="menuitem" type="button">
           <mat-icon>logout</mat-icon>
           Logout
         </button>
       </ng-container>
 
       <ng-template #guestMenu>
-        <ul class="navbar-nav" *ngIf="navItems$ | async as navItems">
+        <ul class="navbar-nav" role="menu" *ngIf="navItems$ | async as navItems">
           <li
             class="nav-item"
             *ngFor="let item of navItems; trackBy: trackByRoute"
-          >
+            role="none">
             <a
               class="nav-link"
               [routerLink]="item.route"
               routerLinkActive="active"
               (click)="onLinkClick()"
-            >
+              role="menuitem">
               <mat-icon>{{ item.icon }}</mat-icon>
               {{ item.label }}
             </a>
@@ -75,15 +80,14 @@
         </ul>
 
         <div class="navbar-auth">
-          <a routerLink="/login" class="btn btn-outline" (click)="onLinkClick()"
-            >Login</a
-          >
+          <a routerLink="/login" class="btn btn-outline" (click)="onLinkClick()" role="menuitem">Login</a>
           <a
             routerLink="/register"
             class="btn btn-primary"
             (click)="onLinkClick()"
-            >Register</a
-          >
+            role="menuitem">
+            Register
+          </a>
         </div>
       </ng-template>
     </div>
