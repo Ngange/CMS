@@ -122,7 +122,9 @@
         <!-- Publish Options (only for users with publish permission) -->
         <div *ngIf="canPublish" class="publish-options">
           <h3>Publish Options</h3>
-          <p class="help-text">Choose whether to publish immediately or save as draft.</p>
+          <p class="help-text">
+            Choose whether to publish immediately or save as draft.
+          </p>
           <mat-button-toggle-group
             formControlName="publishState"
             name="publishState"
@@ -148,8 +150,12 @@
             <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
             {{
               isLoading
-                ? (isPublishSelected ? 'Publishing...' : 'Creating...')
-                : (isPublishSelected ? 'Publish Article' : 'Create Draft')
+                ? isPublishSelected
+                  ? "Publishing..."
+                  : "Creating..."
+                : isPublishSelected
+                ? "Publish Article"
+                : "Create Draft"
             }}
           </button>
           <button
