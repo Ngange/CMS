@@ -4,6 +4,6 @@ export const environment = {
   backendUrl: 'https://cms-rrzq.onrender.com',
   cloudinary: {
     cloudName: 'dhnoiitry',
-    unsignedUploadPreset: 'unsigned_upload_preset'
+    unsignedUploadPreset: 'cms_unsigned'
   }
 };
