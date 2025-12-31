@@ -1,6 +1,7 @@
 [build]
-  command = "npm run build -- --configuration production"
-  publish = "cms-frontend/dist/cms-frontend/browser"
+  base = "cms-frontend"
+  command = "npm run build -- --configuration=production"
+  publish = "dist/cms-frontend/browser"
 
 [[redirects]]
   from = "/*"
