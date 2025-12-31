@@ -61,7 +61,7 @@ const updateArticle = async (req, res) => {
   try {
     const { title, body, image, status } = req.body;
     console.log('updateArticle received:', { title, body, image, status });
-    
+
     const updateData = { title, body };
 
     // Always include image (Cloudinary URL, or null to clear)
