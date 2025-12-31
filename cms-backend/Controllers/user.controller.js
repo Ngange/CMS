@@ -181,7 +181,10 @@ const updateUser = async (req, res) => {
     // Hash password if provided (findByIdAndUpdate doesn't trigger pre-save hook)
     if (filteredUpdates.password) {
       const salt = await bcrypt.genSalt(10);
-      filteredUpdates.password = await bcrypt.hash(filteredUpdates.password, salt);
+      filteredUpdates.password = await bcrypt.hash(
+        filteredUpdates.password,
+        salt
+      );
     }
 
     const user = await User.findByIdAndUpdate(userId, filteredUpdates, {

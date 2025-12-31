@@ -1,26 +1,38 @@
-# Dynamic Role-Based CMS (MEAN)
+# Dynamic Role-Based Content Management System (MEAN Stack)
 
-A full-stack CMS with JWT auth, dynamic roles/permissions, and image uploads built on MongoDB, Express.js, Angular, and Node.js.
+CMS Dashboard Preview
 
-## Project Structure
-```
-CMS/
-├── cms-backend/      # Express API, auth, RBAC, uploads
-├── cms-frontend/     # Angular app with guards/interceptors
-└── README.md
-```
+A comprehensive Content Management System with dynamic role-based access control.
 
-## Tech Stack
-- **Backend:** Node.js, Express, MongoDB (Mongoose), Multer, JWT, Bcrypt
-- **Frontend:** Angular, Angular Material, RxJS
-- **Auth:** Access + refresh tokens, role/permission checks server- and client-side
+📋 **Table of Contents**
+- Overview
+- Features
+- Prerequisites
+- Installation
+- Configuration
+- Database Setup
+- Test Users
+- API Documentation
+- Frontend Routes
+- Screenshots
+- Deployment
+- Troubleshooting
 
-## Prerequisites
-- Node.js 16+ and npm
-- MongoDB (local or Atlas)
-- Angular CLI 16+
+📖 **Overview**
+This is a dynamic Role-Based Content Management System (CMS) built with the MEAN stack (MongoDB, Express.js, Angular, Node.js). It provides secure authentication, dynamic role management, granular permissions, and full CRUD for content with role-based restrictions.
 
-Verify:
+🚀 **Features**
+- 🔐 Authentication & Security: JWT access/refresh tokens, bcrypt hashing, RBAC, protected routes, secure logout
+- 👥 Role Management: SuperAdmin, Manager, Contributor, Viewer; custom roles; permission matrix
+- 📝 Content Management: Create/read/update/delete articles, publish/unpublish, image uploads, draft vs published, role-based visibility
+- 🎨 Frontend: Angular Material UI, role-based navigation, conditional rendering, route guards, real-time permission updates
+
+🛠 **Prerequisites**
+- Node.js v16+ and npm v8+
+- MongoDB v4.4+
+- Angular CLI v16+
+
+Verify installations:
 ```bash
 node --version
 npm --version
@@ -28,116 +40,265 @@ mongod --version
 ng version
 ```
 
-## Local Setup
-1) Clone & install
+📥 **Installation**
+1) Clone and navigate
 ```bash
-# from CMS/
-cd cms-backend && npm install
-cd ../cms-frontend && npm install
+
+cd CMS
+```
+2) Backend setup
+```bash
+cd cms-backend
+npm install
+```
+3) Frontend setup
+```bash
+cd ../cms-frontend
+npm install
 ```
 
-2) Backend env (`cms-backend/.env`)
+⚙️ **Configuration**
+Backend (`cms-backend/.env`):
 ```dotenv
+# Server
 PORT=3000
 NODE_ENV=development
+
+# Database
 MONGODB_URI=mongodb://localhost:27017/cms_db
-JWT_SECRET=change-me
-JWT_REFRESH_SECRET=change-me-too
-JWT_ACCESS_EXPIRES_IN=30m
-JWT_REFRESH_EXPIRES_IN=7d
+
+# JWT
+JWT_ACCESS_SECRET=your_access_secret_key_change_in_production
+JWT_REFRESH_SECRET=your_refresh_secret_key_change_in_production
+ACCESS_TOKEN_EXPIRY=15m
+REFRESH_TOKEN_EXPIRY=7d
+
+# CORS
 FRONTEND_URL=http://localhost:4200
-MAX_FILE_SIZE=5000000
-ALLOWED_FILE_TYPES=jpg,jpeg,png,gif
+
+# File Uploads
+MAX_FILE_SIZE=5242880
+UPLOAD_PATH=./uploads
 ```
 
-3) Frontend environment (`cms-frontend/src/environments/environment.ts` already points to `http://localhost:3000/api`).
-
-4) Initialize roles (Mongo running)
-```bash
-cd cms-backend
-npm run init-roles
-```
-
-5) Run locally
-```bash
-# backend
-cd cms-backend
-npm run dev
-
-# frontend (new terminal)
-cd cms-frontend
-ng serve
-```
-Visit http://localhost:4200
-
-## Test Users
-- SuperAdmin: `superadmin@cms.com` / `password123`
-- Manager: `manager@cms.com` / `password123`
-- Contributor: `contributor@cms.com` / `password123`
-- Viewer: `viewer@cms.com` / `password123`
-
-## API Overview (base: `http://localhost:3000/api`)
-- Auth: POST `/auth/register`, POST `/auth/login`, GET `/profile`, PUT `/profile`, POST `/auth/change-password`, POST `/auth/logout`, GET `/auth/system-roles`
-- Articles: GET `/articles`, GET `/articles/:id`, POST `/articles`, PUT `/articles/:id`, DELETE `/articles/:id`, POST `/articles/:id/publish`, POST `/articles/:id/unpublish`
-- Roles: GET `/roles`, POST `/roles`, PUT `/roles/:roleId`, DELETE `/roles/:roleId`
-- Users: GET `/users`, GET `/users/:id`, PUT `/users/:id`, DELETE `/users/:id`
-- Health: GET `/health`
-
-## Frontend Routes
-- Public: `/`, `/login`, `/register`
-- Protected: `/dashboard`, `/profile`, `/articles`, `/articles/create`, `/articles/view/:id`, `/articles/edit/:id`
-- Admin: `/admin/users`, `/admin/roles`, `/admin/permissions`
-
-## Production Deployment (free-friendly)
-### 1) Database (MongoDB Atlas)
-- Create free M0 cluster → add DB user → allow IPs → copy connection string
-- Set `MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/cms_db?retryWrites=true&w=majority`
-
-### 2) Backend (Render or Railway)
-- Connect repo → create Web Service
-- Build: `npm install`
-- Start: `npm start`
-- Env vars: `PORT=3000`, `NODE_ENV=production`, `MONGODB_URI=...`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN=15m`, `JWT_REFRESH_EXPIRES_IN=7d`, `FRONTEND_URL=https://your-frontend-url`
-- Note: Free tiers have **ephemeral storage**; use cloud storage for uploads (see below).
-
-### 3) Frontend (Vercel or Netlify)
-- Framework preset: Angular; root: `cms-frontend`
-- Build: `ng build --configuration production`
-- Output: `dist/cms-frontend/browser`
-- Update `environment.prod.ts` with your backend URL:
+Frontend (`cms-frontend/src/environments/environment.ts`):
 ```typescript
 export const environment = {
-  production: true,
-  apiUrl: 'https://your-backend.onrender.com/api',
-  backendUrl: 'https://your-backend.onrender.com'
+  production: false,
+  apiUrl: 'http://localhost:3000/api',
+  appName: 'Role-Based CMS'
 };
 ```
-- Deploy; then set `FRONTEND_URL` on backend to the deployed frontend URL.
 
-### 4) File Uploads in Production
-Render/Railway file systems reset on deploy. Use cloud storage:
-- **Cloudinary (recommended for images):** `cloudinary`, `multer-storage-cloudinary`
-- **AWS S3 / DigitalOcean Spaces:** S3-compatible buckets
-Update upload middleware to use cloud storage instead of local disk.
+🗄 **Database Setup**
+1) Start MongoDB
+```bash
+# Windows
+mongod
+# macOS/Linux
+sudo systemctl start mongod
+# or custom path
+mongod --dbpath /path/to/data
+```
+2) Initialize database
+```bash
+cd cms-backend
+npm run seed
+```
+Creates default roles and test users.
 
-### 5) Prod Checklist
-- Rotate strong JWT secrets
-- Set `NODE_ENV=production`
-- Enable CORS for your frontend URL only
-- Run `npm run init-roles` against production DB once
-- Test auth, roles, uploads end-to-end
-- Add HTTPS (platform-provided TLS on Render/Vercel/Netlify)
+👥 **Test Users**
+- SuperAdmin — Email: superadmin@cms.com — Password: Admin@123 — Full access
+- Manager — Email: manager@cms.com — Password: Manager@123 — Manage/publish articles, view users
+- Contributor — Email: contributor@cms.com — Password: Contributor@123 — Create/edit own articles, view published
+- Viewer — Email: viewer@cms.com — Password: Viewer@123 — View published only
 
-## Troubleshooting
-- Mongo refused: ensure MongoDB running / Atlas IP allowlist
-- 401/403: re-login to refresh tokens; verify permissions
-- CORS errors: check `FRONTEND_URL` matches deployed frontend
-- Uploads disappearing: move to Cloudinary/S3
-- Angular build issues: delete `node_modules` and reinstall
+🔌 **API Documentation**
+Base URL: `http://localhost:3000/api`
 
-## Key Scripts
-- Backend: `npm run dev`, `npm start`, `npm run init-roles`
-- Frontend: `ng serve`, `ng build --configuration production`
+Authentication
+| Method | Endpoint | Description | Access |
+| --- | --- | --- | --- |
+| POST | /auth/register | Register new user | Public |
+| POST | /auth/login | User login | Public |
+| GET | /auth/profile | Get user profile | Authenticated |
+| PUT | /auth/profile | Update profile | Authenticated |
+| PUT | /auth/change-password | Change password | Authenticated |
+| POST | /auth/logout | Logout user | Authenticated |
+| GET | /auth/system-roles | Get available roles | Public |
 
-## License
-MIT (add LICENSE file if required).
+Articles
+| Method | Endpoint | Description | Permission |
+| --- | --- | --- | --- |
+| GET | /articles | Get all articles | article:read |
+| GET | /articles/:id | Get single article | article:read |
+| POST | /articles | Create article | article:create |
+| PUT | /articles/:id | Update article | article:update |
+| DELETE | /articles/:id | Delete article | article:delete |
+| POST | /articles/:id/publish | Publish article | article:publish |
+| POST | /articles/:id/unpublish | Unpublish article | article:publish |
+
+Roles
+| Method | Endpoint | Description | Permission |
+| --- | --- | --- | --- |
+| GET | /roles | Get all roles | role:read |
+| POST | /roles | Create role | role:create |
+| PUT | /roles/:id | Update role | role:update |
+| DELETE | /roles/:id | Delete role | role:delete |
+| GET | /roles/permissions-matrix | Get permission matrix | role:read |
+
+Users
+| Method | Endpoint | Description | Permission |
+| --- | --- | --- | --- |
+| GET | /users | Get all users | user:read |
+| GET | /users/:id | Get single user | user:read |
+| PUT | /users/:id | Update user | user:update |
+| DELETE | /users/:id | Delete user | user:delete |
+
+Health
+- GET /health — API status
+
+🚦 **Frontend Routes**
+- Public: `/`, `/login`, `/register`
+- Protected: `/dashboard`, `/profile`, `/articles`, `/articles/create`, `/articles/edit/:id`, `/articles/view/:id`
+- Admin (SuperAdmin): `/admin/users`, `/admin/roles`, `/admin/permissions`
+
+📸 **Screenshots** (placeholders)
+- Login: Login Page with Role Selection
+- SuperAdmin Dashboard: SuperAdmin Dashboard with All Controls
+- Viewer Dashboard: Viewer Dashboard with Read-Only Access
+- Article Creation: Article Creation with Image Upload
+- Role Management: Role Management Interface
+- Permissions Matrix: Permissions Matrix Visualization
+- User Profile: User Profile with Photo Upload
+
+🌐 **Deployment**
+
+Backend (Node.js)
+- Option 1: Heroku
+```bash
+cd cms-backend
+heroku create cms-backend
+heroku addons:create mongolab
+git push heroku main
+heroku config:set JWT_ACCESS_SECRET=your_production_secret MONGODB_URI=your_mongodb_uri
+```
+- Option 2: DigitalOcean/AWS
+```bash
+npm run build
+npm install -g pm2
+pm2 start server.js --name cms-backend
+pm2 save
+pm2 startup
+```
+
+Frontend (Angular)
+```bash
+cd cms-frontend
+npm run build --prod
+```
+- Netlify/Vercel: build `npm run build`, publish `dist/frontend` (or your Angular output)
+- Firebase Hosting:
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy
+```
+
+MongoDB Deployment
+- Atlas: create free cluster, get connection string, set `MONGODB_URI`
+- Self-hosted (Ubuntu):
+```bash
+sudo apt install mongodb
+sudo systemctl start mongod
+sudo systemctl enable mongod
+```
+
+Production env vars
+```dotenv
+PORT=80
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cms_db
+JWT_ACCESS_SECRET=strong_random_secret_key_here
+JWT_REFRESH_SECRET=another_strong_random_secret_key_here
+FRONTEND_URL=https://your-frontend-domain.com
+NODE_ENV=production
+```
+
+CORS (backend/app.js)
+```javascript
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}));
+```
+
+SSL (HTTPS example)
+```javascript
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('path/to/private.key'),
+  cert: fs.readFileSync('path/to/certificate.crt')
+};
+
+https.createServer(options, app).listen(443);
+```
+
+Nginx reverse proxy (example)
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+    location / {
+        root /path/to/angular/dist;
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+🐛 **Troubleshooting**
+- MongoDB connection refused: start MongoDB / allowlist IP (Atlas)
+- 401 Unauthorized: clear tokens and login again
+- CORS errors: ensure `FRONTEND_URL` matches
+- File upload too large: adjust `MAX_FILE_SIZE`
+- Angular module not found: delete `node_modules`, reinstall
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+- Logs: backend `npm run dev` or `node server.js`; frontend check browser console; Mongo logs via `mongod --logpath ...`
+
+📁 **Project Structure**
+```
+CMS/
+├── cms-backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── uploads/
+│   ├── scripts/
+│   ├── app.js
+│   └── server.js
+├── cms-frontend/
+│   ├── src/
+│   ├── angular.json
+│   └── package.json
+└── README.md
+```
+
+🔧 **Development Commands**
+- Backend: `npm run dev`, `npm start`, `npm test`, `npm run seed`, `npm run lint`
+- Frontend: `ng serve`, `ng build`, `ng test`, `ng lint`
