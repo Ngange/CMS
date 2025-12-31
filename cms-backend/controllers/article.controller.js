@@ -60,6 +60,8 @@ const getArticle = async (req, res) => {
 const updateArticle = async (req, res) => {
   try {
     const { title, body, image, status } = req.body;
+    console.log('updateArticle received:', { title, body, image, status });
+    
     const updateData = { title, body };
 
     // Always include image (Cloudinary URL, or null to clear)
@@ -70,6 +72,8 @@ const updateArticle = async (req, res) => {
       updateData.status = status;
     }
 
+    console.log('Updating article with:', updateData);
+
     const article = await Article.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
@@ -79,8 +83,10 @@ const updateArticle = async (req, res) => {
       return res.status(404).json({ message: 'Article not found' });
     }
 
+    console.log('Updated article:', article);
     res.json(article);
   } catch (error) {
+    console.error('updateArticle error:', error);
     res.status(400).json({ message: error.message });
   }
 };
