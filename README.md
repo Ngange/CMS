@@ -1,5 +1,7 @@
 # Dynamic Role-Based Content Management System (MEAN Stack)
 
+#### Netlify: https://cms-role-base-access.netlify.app/
+
 CMS Dashboard Preview
 
 A comprehensive Content Management System with dynamic role-based access control.
@@ -13,13 +15,42 @@ A comprehensive Content Management System with dynamic role-based access control
 - Database Setup
 - Test Users
 - API Documentation
-- Frontend Routes
+- Routes
 - Screenshots
-- Deployment
-- Troubleshooting
+- Project Structure
 
 📖 **Overview**
-This is a dynamic Role-Based Content Management System (CMS) built with the MEAN stack (MongoDB, Express.js, Angular, Node.js). It provides secure authentication, dynamic role management, granular permissions, and full CRUD for content with role-based restrictions.
+This is a dynamic Role-Based Content Management System (CMS) built with the MEAN stack (MongoDB, Express.js, Angular, Node.js). It provides secure authentication, dynamic role management, granular permissions, and full CRUD for content with role-based restrictions. The CMS Backend provides a RESTful API for managing users, roles, permissions, and articles with role-based access control. All requests (except authentication) require a valid JWT access token in the `Authorization` header.
+
+**Base URL:** `http://localhost:3000/api`
+
+## Common Response Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden (Access Denied) |
+| 404 | Not Found |
+| 500 | Server Error |
+
+## Authentication
+
+### JWT Bearer Token
+
+All protected endpoints require an `Authorization` header with a Bearer token:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+Token lifetime:
+- **Access Token:** 30 minutes
+- **Refresh Token:** 7 days
+
+---
 
 🚀 **Features**
 - 🔐 Authentication & Security: JWT access/refresh tokens, bcrypt hashing, RBAC, protected routes, secure logout
@@ -27,10 +58,53 @@ This is a dynamic Role-Based Content Management System (CMS) built with the MEAN
 - 📝 Content Management: Create/read/update/delete articles, publish/unpublish, image uploads, draft vs published, role-based visibility
 - 🎨 Frontend: Angular Material UI, role-based navigation, conditional rendering, route guards, real-time permission updates
 
+## Features Overview
+
+### Authentication & Authorization
+- ✅ JWT-based authentication with access & refresh tokens
+- ✅ Bcrypt password hashing
+- ✅ Role-based access control (RBAC)
+- ✅ Dynamic permission system
+- ✅ Secure logout functionality
+
+### Role Management
+- ✅ Four default roles: SuperAdmin, Manager, Contributor, Viewer
+- ✅ Custom role creation by SuperAdmin
+- ✅ Dynamic permission assignment
+- ✅ Permission inheritance model
+
+### Content Management
+- ✅ Create articles with optional image upload
+- ✅ Edit and delete articles
+- ✅ Publish/unpublish functionality (Manager & SuperAdmin only)
+- ✅ Article view counter
+- ✅ Draft and published status
+
+### User Interface
+- ✅ Clean, responsive design
+- ✅ Role-based navigation menu
+- ✅ Conditional component display based on permissions
+- ✅ Permission directive (`*appHasPermission`)
+- ✅ Access matrix showing role-permission mapping
+- ✅ Real-time user profile updates
+
+### Security Features
+- ✅ CORS protection
+- ✅ Helmet.js security headers
+- ✅ Rate limiting (100 requests per 15 minutes)
+- ✅ JWT token expiration
+- ✅ Password hashing with bcrypt
+- ✅ Authorization middleware on backend
+
+
 🛠 **Prerequisites**
-- Node.js v16+ and npm v8+
-- MongoDB v4.4+
-- Angular CLI v16+
+
+Ensure you have the following installed on your machine:
+
+- **Node.js** (v14 or higher) - [Download](https://nodejs.org/)
+- **MongoDB** (v4.4 or higher) - [Download](https://www.mongodb.com/try/download/community)
+- **npm** or **yarn** (comes with Node.js)
+- **Angular CLI** (v16+) - Install globally: `npm install -g @angular/cli`
 
 Verify installations:
 ```bash
@@ -40,24 +114,35 @@ mongod --version
 ng version
 ```
 
-📥 **Installation**
-1) Clone and navigate
-```bash
+ ## 📥Installation
 
+### Step 1: Clone/Navigate to Project Directory
+
+```bash
 cd CMS
 ```
-2) Backend setup
+
+### Step 2: Backend Setup
+
 ```bash
 cd cms-backend
-npm install
-```
-3) Frontend setup
-```bash
-cd ../cms-frontend
+
+# Install dependencies
 npm install
 ```
 
-⚙️ **Configuration**
+### Step 3: Frontend Setup
+
+```bash
+cd ../cms-frontend
+
+# Install dependencies
+npm install
+```
+
+---
+
+ ## **⚙️Configuration**
 Backend (`cms-backend/.env`):
 ```dotenv
 # Server
@@ -65,12 +150,12 @@ PORT=3000
 NODE_ENV=development
 
 # Database
-MONGODB_URI=mongodb://localhost:27017/cms_db
+MONGODB_URI=mongodb://localhost:27017/your_db
 
 # JWT
 JWT_ACCESS_SECRET=your_access_secret_key_change_in_production
 JWT_REFRESH_SECRET=your_refresh_secret_key_change_in_production
-ACCESS_TOKEN_EXPIRY=15m
+ACCESS_TOKEN_EXPIRY=1h
 REFRESH_TOKEN_EXPIRY=7d
 
 # CORS
@@ -90,7 +175,7 @@ export const environment = {
 };
 ```
 
-🗄 **Database Setup**
+ ## **🗄 Database Setup**
 1) Start MongoDB
 ```bash
 # Windows
@@ -103,7 +188,9 @@ mongod --dbpath /path/to/data
 2) Initialize database
 ```bash
 cd cms-backend
-npm run seed
+npm run .\scripts\init-roles.js
+npm run .\scripts\create-admin.js
+npm run .\scripts\create-users-and-articles.js
 ```
 Creates default roles and test users.
 
@@ -117,54 +204,69 @@ Creates default roles and test users.
 Base URL: `http://localhost:3000/api`
 
 Authentication
-| Method | Endpoint | Description | Access |
-| --- | --- | --- | --- |
-| POST | /auth/register | Register new user | Public |
-| POST | /auth/login | User login | Public |
-| GET | /auth/profile | Get user profile | Authenticated |
-| PUT | /auth/profile | Update profile | Authenticated |
-| PUT | /auth/change-password | Change password | Authenticated |
-| POST | /auth/logout | Logout user | Authenticated |
-| GET | /auth/system-roles | Get available roles | Public |
+| Method | Endpoint               | Description         | Access        |
+| ---    | ---                    | ---                 | ---           |
+| POST   | /auth/register         | Register new user   | Public        |
+| POST   | /auth/login            | User login          | Public        |
+| GET    | /auth/profile          | Get user profile    | Authenticated |
+| PUT    | /auth/profile          | Update profile      | Authenticated |
+| PUT    | /auth/change-password  | Change password     | Authenticated |
+| POST   | /auth/logout           | Logout user         | Authenticated |
+| GET    | /auth/system-roles     | Get available roles | Public        |
 
 Articles
-| Method | Endpoint | Description | Permission |
-| --- | --- | --- | --- |
-| GET | /articles | Get all articles | article:read |
-| GET | /articles/:id | Get single article | article:read |
-| POST | /articles | Create article | article:create |
-| PUT | /articles/:id | Update article | article:update |
-| DELETE | /articles/:id | Delete article | article:delete |
-| POST | /articles/:id/publish | Publish article | article:publish |
-| POST | /articles/:id/unpublish | Unpublish article | article:publish |
+| Method | Endpoint                | Description        | Permission      |
+| ---    | ---                     | ---                | ---             |
+| GET    | /articles               | Get all articles   | article:read    |
+| GET    | /articles/:id           | Get single article | article:read    |
+| POST   | /articles               | Create article     | article:create  |
+| PUT    | /articles/:id           | Update article     | article:update  |
+| DELETE | /articles/:id           | Delete article     | article:delete  |
+| POST   | /articles/:id/publish   | Publish article    | article:publish |
+| POST   | /articles/:id/unpublish | Unpublish article  | article:publish |
 
 Roles
-| Method | Endpoint | Description | Permission |
-| --- | --- | --- | --- |
-| GET | /roles | Get all roles | role:read |
-| POST | /roles | Create role | role:create |
-| PUT | /roles/:id | Update role | role:update |
-| DELETE | /roles/:id | Delete role | role:delete |
-| GET | /roles/permissions-matrix | Get permission matrix | role:read |
+| Method | Endpoint                  | Description           | Permission  |
+| ---    | ---                       | ---                   | ---         |
+| GET    | /roles                    | Get all roles         | role:read   |
+| POST   | /roles                    | Create role           | role:create |
+| PUT    | /roles/:id                | Update role           | role:update |
+| DELETE | /roles/:id                | Delete role           | role:delete |
+| GET    | /roles/permissions-matrix | Get permission matrix | role:read   |
 
 Users
-| Method | Endpoint | Description | Permission |
-| --- | --- | --- | --- |
-| GET | /users | Get all users | user:read |
-| GET | /users/:id | Get single user | user:read |
-| PUT | /users/:id | Update user | user:update |
-| DELETE | /users/:id | Delete user | user:delete |
+| Method | Endpoint   | Description     | Permission  |
+| ---    | ---        | ---             | ---         |
+| GET    | /users     | Get all users   | user:read   |
+| GET    | /users/:id | Get single user | user:read   |
+| PUT    | /users/:id | Update user     | user:update |
+| DELETE | /users/:id | Delete user     | user:delete |
 
-Health
-- GET /health — API status
 
-🚦 **Frontend Routes**
-- Public: `/`, `/login`, `/register`
-- Protected: `/dashboard`, `/profile`, `/articles`, `/articles/create`, `/articles/edit/:id`, `/articles/view/:id`
-- Admin (SuperAdmin): `/admin/users`, `/admin/roles`, `/admin/permissions`
+## Frontend Routes
+
+### Public Routes
+- `/` - Home page
+- `/login` - User login
+- `/register` - User registration
+
+### Protected Routes (Requires Authentication)
+- `/dashboard` - User dashboard (all authenticated users)
+- `/profile` - User profile (all authenticated users)
+- `/articles` - Article list (requires `article:read` permission)
+- `/articles/create` - Create article (requires `article:create` permission)
+- `/articles/view/:id` - View single article (all authenticated users)
+- `/articles/edit/:id` - Edit article (requires `article:update` permission)
+
+### Admin Routes (SuperAdmin Only)
+- `/admin/users` - User management
+- `/admin/roles` - Role management
+- `/admin/permissions` - Permissions matrix
+
 
 📸 **Screenshots** (placeholders)
-- Login: Login Page with Role Selection
+- Login: Login Page and Registration pages
+
 - SuperAdmin Dashboard: SuperAdmin Dashboard with All Controls
 - Viewer Dashboard: Viewer Dashboard with Read-Only Access
 - Article Creation: Article Creation with Image Upload
@@ -172,131 +274,38 @@ Health
 - Permissions Matrix: Permissions Matrix Visualization
 - User Profile: User Profile with Photo Upload
 
-🌐 **Deployment**
-
-Backend (Node.js)
-- Option 1: Heroku
-```bash
-cd cms-backend
-heroku create cms-backend
-heroku addons:create mongolab
-git push heroku main
-heroku config:set JWT_ACCESS_SECRET=your_production_secret MONGODB_URI=your_mongodb_uri
-```
-- Option 2: DigitalOcean/AWS
-```bash
-npm run build
-npm install -g pm2
-pm2 start server.js --name cms-backend
-pm2 save
-pm2 startup
-```
-
-Frontend (Angular)
-```bash
-cd cms-frontend
-npm run build --prod
-```
-- Netlify/Vercel: build `npm run build`, publish `dist/frontend` (or your Angular output)
-- Firebase Hosting:
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting
-firebase deploy
-```
-
-MongoDB Deployment
-- Atlas: create free cluster, get connection string, set `MONGODB_URI`
-- Self-hosted (Ubuntu):
-```bash
-sudo apt install mongodb
-sudo systemctl start mongod
-sudo systemctl enable mongod
-```
-
-Production env vars
-```dotenv
-PORT=80
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cms_db
-JWT_ACCESS_SECRET=strong_random_secret_key_here
-JWT_REFRESH_SECRET=another_strong_random_secret_key_here
-FRONTEND_URL=https://your-frontend-domain.com
-NODE_ENV=production
-```
-
-CORS (backend/app.js)
-```javascript
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true
-}));
-```
-
-SSL (HTTPS example)
-```javascript
-const https = require('https');
-const fs = require('fs');
-
-const options = {
-  key: fs.readFileSync('path/to/private.key'),
-  cert: fs.readFileSync('path/to/certificate.crt')
-};
-
-https.createServer(options, app).listen(443);
-```
-
-Nginx reverse proxy (example)
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-    location / {
-        root /path/to/angular/dist;
-        try_files $uri $uri/ /index.html;
-    }
-}
-```
-
-🐛 **Troubleshooting**
-- MongoDB connection refused: start MongoDB / allowlist IP (Atlas)
-- 401 Unauthorized: clear tokens and login again
-- CORS errors: ensure `FRONTEND_URL` matches
-- File upload too large: adjust `MAX_FILE_SIZE`
-- Angular module not found: delete `node_modules`, reinstall
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-- Logs: backend `npm run dev` or `node server.js`; frontend check browser console; Mongo logs via `mongod --logpath ...`
 
 📁 **Project Structure**
 ```
+```
 CMS/
 ├── cms-backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── uploads/
-│   ├── scripts/
-│   ├── app.js
-│   └── server.js
-├── cms-frontend/
-│   ├── src/
-│   ├── angular.json
-│   └── package.json
-└── README.md
+│   ├── config/              # Database & JWT configuration
+│   ├── controllers/         # Route handlers
+│   ├── middleware/          # Auth & authorization middleware
+│   ├── models/              # MongoDB schemas
+│   ├── routes/              # API route definitions
+│   ├── services/            # Business logic
+│   ├── scripts/             # Utility scripts
+│   ├── uploads/             # Uploaded files
+│   ├── server.js            # Entry point
+│   ├── app.js               # Express app configuration
+│   ├── package.json         # Dependencies
+│   └── .env                 # Environment variables
+│
+└── cms-frontend/
+    ├── src/
+    │   ├── app/
+    │   │   ├── core/        # Guards, services, models, interceptors
+    │   │   ├── modules/     # Feature modules (admin, articles, profile, public)
+    │   │   ├── shared/      # Shared components & directives
+    │   │   └── app.module.ts # Main app module
+    │   ├── assets/          # Static assets
+    │   ├── environments/    # Environment config
+    │   ├── styles.css       # Global styles
+    │   └── main.ts          # Bootstrap
+    ├── angular.json         # Angular CLI config
+    └── package.json         # Dependencies
 ```
 
 🔧 **Development Commands**
