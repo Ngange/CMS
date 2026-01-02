@@ -265,18 +265,28 @@ Users
 
 
 📸 **Screenshots** (placeholders)
-- Login: Login Page and Registration pages
+- Login: Login Page and Registration page - users can only register as "Viewer" which is the default role. Super Admin can change user role after registration.
+![Login Page](./screenshots/login.png) 
+![Registration page](./screenshots/register.png)
 
 - SuperAdmin Dashboard: SuperAdmin Dashboard with All Controls
-- Viewer Dashboard: Viewer Dashboard with Read-Only Access
-- Article Creation: Article Creation with Image Upload
+![Registration page](./screenshots/admin-dashboard.png)
+
+- Viewer Dashboard: Viewer Dashboard with Read-Only Access ![Viewer Dashboard](./screenshots/viewer%20dashboard.png)
+
+- Article Creation: Article Creation with Image Upload ![Article Creation](./screenshots/create-article.png)
+
 - Role Management: Role Management Interface
-- Permissions Matrix: Permissions Matrix Visualization
-- User Profile: User Profile with Photo Upload
+![Role Management](./screenshots/roles.png)
+
+- Permissions Matrix: Permissions Matrix Visualization ![Permissions](./screenshots/permissions.png)
+
+- User Profile: User Profile with Photo Upload ![User Profile](./screenshots/profile.png)
+
+- Users: List of users with their details editable by superAdmin ![List of Users](./screenshots/list-of-users.png)
 
 
 📁 **Project Structure**
-```
 ```
 CMS/
 ├── cms-backend/
